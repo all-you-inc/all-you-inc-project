@@ -1,0 +1,247 @@
+.font-weight{
+    font-weight: bold !important;
+}
+.flash-heading-success{
+    color: green;
+    font-size: x-large;
+    font-weight: bold;
+    margin: 20px 0 20px 0;
+}
+.flash-heading-error{
+    color: red;
+    font-size: x-large;
+    font-weight: bold;
+    margin: 20px 0 20px 0;
+}
+.flash-message{
+    color: #444;
+    font-size: 1.7rem !important;
+    line-height: 1.4;
+}
+.center {
+    margin: 0 auto;
+}
+.cart-form{
+    margin-bottom: 0rem !important;
+}
+.custom-yellow-header{
+    background: #e7e761 !important;
+}
+.signup-btn {
+    background: #ffff01;
+    color: #000001;
+    margin: 0 2% 0 0;
+    border-radius: 10px;
+    border-color: transparent;
+    font-weight: bold;
+    font-size: initial;
+    line-height: 1;
+    min-width: 100px;
+}
+.custom-home-btn{
+    color: #484343 !important;
+}
+.sticky-header.fixed{
+    background: #e7e761 !important;
+}
+.spotlight-main{
+    background: #fff !important;
+}
+.header-right{
+    color: #484343 !important;
+}
+.menu-gray{
+    color: #646a70 !important;
+}
+.dropdown-toggle{
+    color: #646a70 !important;
+}
+/*Profile Card CSS start*/
+.profile-card-3 {
+    font-family: 'Open Sans', Arial, sans-serif;
+    position: relative;
+    float: left;
+    overflow: hidden;
+    width: 100%;
+    text-align: center;
+    height:368px;
+    border-radius: 8px;
+}
+.profile-card-3 .background-block {
+    float: left;
+    width: 100%;
+    height: 200px;
+    /*overflow: hidden;*/
+}
+.profile-card-3 .background-block .background {
+    width: 100%;
+    height: -webkit-fill-available;
+}
+.profile-card-3 .card-content {
+    width: 100%;
+    padding: 15px 25px;
+    color:#232323;
+    float:left;
+    background:#fff;
+    height:50%;
+    border-radius:0 0 5px 5px;
+    position: relative;
+    /*z-index: 9999;*/
+}
+.profile-card-3 .card-content::before {
+    content: '';
+    background: #efefef;
+    width: 120%;
+    height: 100%;
+    left: 11px;
+    bottom: 51px;
+    position: absolute;
+    z-index: -1;
+    /*transform: rotate(-13deg);*/
+}
+.profile-card-3 .profile {
+    border-radius: 50%;
+    position: relative;
+    bottom: 50%;
+    left: 50%;
+    max-width: 100px;
+    opacity: 1;
+    box-shadow: 3px 3px 20px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 1);
+    -webkit-transform: translate(-50%, 0%);
+    transform: translate(-50%, 0%);
+    z-index:1;
+}
+.profile-card-3 h2 {
+    margin: 10% 0 0;
+    font-weight: 600;
+    font-size: 25px;
+}
+.profile-card-3 h4 {
+    margin: 20% 0 0;
+    font-weight: 500;
+    font-size: 20px;
+    font-weight: bold;
+}
+.fan {
+    display: block;
+    font-size: 1.9rem;
+    margin-top: 2%;
+    font-weight: bold;
+    color: orange;
+}
+.profile-card-3 i {
+    display: inline-block;
+    font-size: 16px;
+    color: #232323;
+    text-align: center;
+    border: 1px solid #232323;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 50%;
+    margin:0 5px;
+}
+.profile-card-3 .icon-block{
+    float:left;
+    width:100%;
+    margin-top:15px;
+}
+.profile-card-3 .icon-block a{
+    text-decoration:none;
+}
+.profile-card-3 i:hover {
+    background-color:#232323;
+    color:#fff;
+    text-decoration:none;
+}
+/*Profile Card CSS end*/
+
+/*Plan Subscription CSS start*/
+.plan-main{ background: #fff; }
+.pricingTable{
+    background: #fff;
+    border-radius: 10px;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s ease 0s;
+    border: solid whitesmoke;
+}
+.pricingTable:hover{ box-shadow: 0 0 5px rgba(0,0,0,0.8) inset, 0 0 10px rgba(0,0,0,0.8); }
+.pricingTable svg{
+    display: block;
+    margin-left: -1px;
+}
+.pricingTable .pricing-content{
+    padding: 50px 0 30px;
+    position: relative;
+    
+}
+.pricingTable .title{
+    font-size: 35px;
+    font-weight: 600;
+    color: #ae003d;
+    text-transform: uppercase;
+    margin: 0 0 10px 0;
+}
+.pricingTable .pricing-content ul{
+    padding: 0;
+    margin: 0 0 30px 0;
+    list-style: none;
+    max-height: 300px;
+    overflow: scroll;
+}
+.pricingTable .pricing-content ul li{
+    font-size: 15px;
+    font-weight: 500;
+    color: rgba(0,0,0,0.3);
+    line-height: 40px;
+    text-transform: capitalize;
+}
+.pricingTable .pricingTable-signup{
+    display: inline-block;
+    padding: 8px 50px;
+    background: #ae003d;
+    border-radius: 20px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+    position: relative;
+    transition: all 0.3s ease 0s;
+}
+.pricingTable:hover .pricingTable-signup{ box-shadow: 0 0 10px #ae003d; }
+.pricingTable .pricingTable-signup:hover{
+    color: #ae003d;
+    background: #fff;
+    box-shadow: 0 0 10px #ae003d, 0 0 10px #000 inset;
+}
+.pricingTable.blue .title{ color: #005c99; }
+.pricingTable.blue .pricingTable-signup{ background: #005c99; }
+.pricingTable.blue:hover .pricingTable-signup{ box-shadow: 0 0 10px #005c99; }
+.pricingTable.blue .pricingTable-signup:hover{
+    color: #005c99;
+    background: #fff;
+    box-shadow:0 0 10px #005c99, 0 0 10px #000 inset;
+}
+.pricingTable.green .title{ color: green; }
+.pricingTable.green .pricingTable-signup{ background: green; }
+.pricingTable.green:hover .pricingTable-signup{ box-shadow: 0 0 10px green; }
+.pricingTable.green .pricingTable-signup:hover{
+    color: green;
+    background: #fff;
+    box-shadow:0 0 10px green, 0 0 10px #000 inset;
+}
+.pricingTable.red .title{ color: #db2c29; }
+.pricingTable.red .pricingTable-signup{ background: #db2c29; }
+.pricingTable.red:hover .pricingTable-signup{ box-shadow: 0 0 10px #db2c29; }
+.pricingTable.red .pricingTable-signup:hover{
+    color: #db2c29;
+    background: #fff;
+    box-shadow:0 0 10px #db2c29, 0 0 10px #000 inset;
+}
+@media only screen and (max-width: 990px){
+    .pricingTable{ margin-bottom: 30px; }
+}
+/*Plan Subscription CSS end*/
