@@ -9,6 +9,24 @@ use yii\web\AssetBundle;
  */
 class AppAsset extends AssetBundle {
 
+    public function __construct()
+    {
+        $search = '/shop/product/view';
+        $this->js = ( \Yii::$app->request->url ==  '/shop/product/create' || preg_match('/\/shop\/product\/view/',\Yii::$app->request->url) ) ? [
+            'js/bootstrap.bundle.min.js',
+            'js/plugins.min.js',
+            'js/main.min.js',
+            'js/custom.js',
+        ] :
+        [
+            'js/jquery.min.js',
+            'js/bootstrap.bundle.min.js',
+            'js/plugins.min.js',
+            'js/main.min.js',
+            'js/custom.js',
+        ];
+    }
+
     public $basePath = '@webroot';
     public $baseUrl = '@web';
     public $css = [
@@ -16,12 +34,7 @@ class AppAsset extends AssetBundle {
         'css/style.min.css',
         'css/custom.css',
     ];
-    public $js = [
-        'js/jquery.min.js',
-        'js/bootstrap.bundle.min.js',
-        'js/plugins.min.js',
-        'js/main.min.js',
-        ];
+    public $js = [];
     public $depends = [
         'frontend\assets\FontAwesomeAsset',
         'yii\web\YiiAsset',

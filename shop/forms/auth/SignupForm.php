@@ -14,6 +14,8 @@ class SignupForm extends Model
     public $email;
     public $phone;
     public $password;
+    public $rePassword;
+    public $reCaptcha;
 
     /**
      * @inheritdoc
@@ -41,6 +43,11 @@ class SignupForm extends Model
             ['password', 'required'],
             ['password', 'string', 'min' => 6],
             ['phone', 'integer'],
+
+            ['rePassword', 'required'],
+            ['rePassword', 'compare', 'compareAttribute'=>'password', 'message'=>"Passwords don't match" ],
+        
+            [['reCaptcha'], \himiklab\yii2\recaptcha\ReCaptchaValidator::className(), 'secret' => \Yii::$app->params['reCaptcha']['secret-key']]
         ];
     }
 }

@@ -31,6 +31,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php echo $form->field($model, 'username')->textInput()->label(false) ?>
                 <label>Password</label>
                 <?php echo $form->field($model, 'password')->passwordInput()->label(false) ?>
+                <?= $form->field($model, 'reCaptcha')->widget(
+                    \himiklab\yii2\recaptcha\ReCaptcha::className(),
+                    ['siteKey' => \Yii::$app->params['reCaptcha']['site-key']]
+                ) ?>
                 <div class="form-footer">
                     <button type="submit" class="btn btn-primary">LOGIN</button>
                     <a href="<?= Html::encode(Url::to(['auth/reset/request'])) ?>" class="forget-pass"> Forgot your password?</a>

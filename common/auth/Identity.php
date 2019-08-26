@@ -45,6 +45,11 @@ class Identity implements IdentityInterface, UserCredentialsInterface
         return ucwords($this->user->name);
     }
 
+    public function getUser()
+    {
+        return $this->user;
+    }
+
     public function validateAuthKey($authKey): bool
     {
         return $this->getAuthKey() === $authKey;

@@ -81,7 +81,17 @@ class CategoryController extends Controller
     }
 
 
+    public function actionGetBrands()
+    {
+        $keyword = Yii::$app->request->getQueryParam('keyword');
 
+        $brands = $this->brands->getAll();
+        $brand_array = [];
+        foreach($brands as $brand){
+            array_push($brand_array,DataHelper::serializeBrand($brand));
+        }
+        return $this->dataHeader($brand_array);
+    }
     
 
     /**

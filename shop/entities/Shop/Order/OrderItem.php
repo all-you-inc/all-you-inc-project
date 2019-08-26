@@ -16,6 +16,7 @@ use yii\db\ActiveRecord;
  * @property string $modification_code
  * @property int $price
  * @property int $quantity
+ * @property Product product
  */
 class OrderItem extends ActiveRecord
 {
@@ -39,6 +40,11 @@ class OrderItem extends ActiveRecord
     public function getCost(): int
     {
         return $this->price * $this->quantity;
+    }
+
+    public function getProduct()
+    {
+        return $this->hasOne(Product::className() , ['id' => 'product_id']);
     }
 
     public static function tableName(): string

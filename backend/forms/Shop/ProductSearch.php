@@ -33,7 +33,17 @@ class ProductSearch extends Model
      */
     public function search(array $params): ActiveDataProvider
     {
-        $query = Product::find()->with('mainPhoto', 'category');
+        $user_is_admin = (new \yii\db\Query())
+                         ->select('*')
+                         ->from('auth_assignments')
+                         ->where(['item_name' => 'admin' , 'user_id' => \Yii::$app->user->id])
+                         ->one();
+
+        if($user_is_admin == null){
+            $query = Product::find()->where(['created_by' => \Yii::$app->user->id])->with('mainPhoto', 'category');
+        }else{
+            $query = Product::find()->with('mainPhoto', 'category');
+        }
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,

@@ -6,6 +6,10 @@ use lhs\Yii2SaveRelationsBehavior\SaveRelationsBehavior;
 use shop\entities\AggregateRoot;
 use shop\entities\User\events\UserSignUpConfirmed;
 use shop\entities\User\events\UserSignUpRequested;
+use common\models\usermembership\UserMembership;
+use common\models\usertalent\UserTalent;
+use common\models\useraddress\UserAddress;
+use shop\entities\Shop\Order\Order;
 use Yii;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveQuery;
@@ -33,6 +37,10 @@ use yii\db\ActiveRecord;
  * 
  * @property Network[] $networks
  * @property WishlistItem[] $wishlistItems
+ * @property UserMembership $userMembership
+ * @property UserTalent $userTalent
+ * @property UserAddress[] $userAddress
+ * @property Order[] $order
  */
 class User extends ActiveRecord implements AggregateRoot
 {
@@ -176,6 +184,89 @@ class User extends ActiveRecord implements AggregateRoot
     public function getWishlistItems(): ActiveQuery
     {
         return $this->hasMany(WishlistItem::class, ['user_id' => 'id']);
+    }
+
+    public function getUserMembership()
+    {
+        return $this->hasOne(UserMembership::className(), ['user_id' => 'id']);
+    }
+
+    public function getUserTalent()
+    {
+        return $this->hasOne(UserTalent::className(), ['user_id' => 'id']);
+    }
+
+    public function getUserAddress()
+    {
+        return $this->hasMany(UserAddress::className(), ['user_id' => 'id']);
+    }
+
+    public function getOrder()
+    {
+        return $this->hasMany(Order::className(), ['user_id' => 'id']);
+    }
+
+    public function canUpdateProfile()
+    {
+        $isPlanTalent = $this->userMembership->membership->id == 1;
+        $isTalentSet = $this->userTalent == NULL;
+
+        if($isPlanTalent && $isTalentSet)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public function hasAddress()
+    {
+         if($this->userAddress == NULL)
+         {
+            return true;
+         }
+         return false;
+    }
+
+    public function canShowTalent()
+    {
+        $isPlanTalent = $this->userMembership->membership->id == 1;
+        
+        if($isPlanTalent)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public function getTotalOrders()
+    {
+        
+        if($this->order == NULL)
+        {
+            return 0;
+        }
+        else
+        {
+            return count($this->order);
+        }
+    }
+
+    public function getTotalSalesAmount()
+    {
+        $orders = Order::find()
+        ->leftJoin('shop_order_items' , 'shop_order_items.order_id = shop_orders.id')
+        ->leftJoin('shop_products' , 'shop_products.id = shop_order_items.product_id')
+        ->andWhere(['shop_products.created_by' => \Yii::$app->user->id])
+        ->all();
+ 
+        if($orders != NULL){
+            foreach($orders as $order)
+            {
+                $totalAmount += $order->getSalesCost();
+            }
+            return $totalAmount;
+        }
+        return 0;
     }
 
     /**

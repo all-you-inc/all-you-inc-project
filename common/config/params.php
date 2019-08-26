@@ -11,4 +11,8 @@ return [
     'mailChimpKey' => '9d5db345127c058c943c09b3aebfb744-us3',
     'mailChimpListId' => '0d003a2dac',
     'smsRuKey' => '',
+    'reCaptcha' => [
+        'secret-key' => '6LdugLQUAAAAAFZYesN7Q-B-dJuWgh-2XOWN6uo2',
+        'site-key' => '6LdugLQUAAAAAP9k-TGv9cjv0P7BEUvLbkczOpd3'
+    ]
 ];

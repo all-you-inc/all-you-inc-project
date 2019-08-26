@@ -44,14 +44,16 @@ AppAsset::register($this);
         </div><!-- End .page-wrapper -->
         <?php $this->endBody() ?>
         <script>
-    $.ajaxSetup({
-        data: <?= \yii\helpers\Json::encode([
+            $.ajaxSetup({
+                data: <?=
+        \yii\helpers\Json::encode([
             \yii::$app->request->csrfParam => \yii::$app->request->csrfToken,
-        ]) ?>
-    });
-</script>
-                        <?= $this->render('shared/flashmessage') ?>
- <a id="scroll-top" href="#top" title="Top" role="button"><i class="icon-angle-up"></i></a>
+        ])
+        ?>
+            });
+        </script>
+<?= $this->render('shared/flashmessage') ?>
+        <a id="scroll-top" href="#top" title="Top" role="button"><i class="icon-angle-up"></i></a>
     </body>
 </html>
 <?php $this->endPage() ?>

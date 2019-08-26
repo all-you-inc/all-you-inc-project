@@ -70,6 +70,7 @@ class Product extends ActiveRecord implements AggregateRoot
         $product->meta = $meta;
         $product->status = self::STATUS_DRAFT;
         $product->created_at = time();
+        $product->created_by = \Yii::$app->user->id;
         return $product;
     }
 

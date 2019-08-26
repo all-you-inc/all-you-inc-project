@@ -106,6 +106,22 @@ class DataHelper
             ];
     }
 
+    /*** Brand Serialization Methods */
+
+    public static function serializeBrand($brand)
+    {
+        return [
+
+                'id' => $brand->id,
+                'title' => $brand->name,
+                "slug" => $brand->slug,
+                "onlineStoreUrl" => "",
+                "image" => []
+               
+            ];
+    }
+
+
     /*** Cart Serialization Methods */
 
     public static function serializeCart($cart,$cost)

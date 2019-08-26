@@ -128,6 +128,32 @@ return [
                 'POST profile' => 'user/profile/profile',
                 // Update Profile (Industry | Talent)
                 'PUT profile' => 'user/profile/profile',
+                // All Countries
+                'GET countries' => 'user/profile/get-countries',
+                // Add Address
+                'POST address' => 'user/profile/add-address',
+                // Add Address
+                'PUT address/<id:\d+>' => 'user/profile/update-address',
+                // Add Address
+                'DELETE address/<id:\d+>' => 'user/profile/delete-address',
+                // Add Address
+                'GET address' => 'user/profile/get-address',
+                // GET Brands
+                'GET shop/brand/collections' => 'shop/category/get-brands',
+                // Create Product
+                'POST shop/product/add' => 'shop/product/create',
+                // Update Product By Id
+                'PUT shop/product/update/<id:\d+>' => 'shop/product/update',
+                // Update Product Price By Id
+                'PUT shop/product/price/<id:\d+>' => 'shop/product/price',
+                // Update Product Quantity By Id
+                'PUT shop/product/quantity/<id:\d+>' => 'shop/product/quantity',
+                // Delete Product By Id
+                'DELETE shop/product/<id:\d+>' => 'shop/product/delete',
+                // Activate Product By Id
+                'POST shop/product/activate/<id:\d+>' => 'shop/product/activate',
+                // Draft Product By Id
+                'POST shop/product/draft/<id:\d+>' => 'shop/product/draft',
             ],
         ],
     ],
@@ -135,7 +161,7 @@ return [
         'class' => 'filsh\yii2\oauth2server\filters\auth\CompositeAuth',
         'except' => ['site/index', 'oauth2/rest/token','user/profile/signup',
                     'shop/product/index','shop/product/category','shop/product/related',
-                    'shop/category/index'],
+                    'shop/category/index','shop/category/get-brands'],
         'authMethods' => [
             ['class' => 'yii\filters\auth\HttpBearerAuth'],
             ['class' => 'yii\filters\auth\QueryParamAuth', 'tokenParam' => 'accessToken'],
@@ -145,7 +171,7 @@ return [
         'class' => 'yii\filters\AccessControl',
         'except' => ['site/index', 'oauth2/rest/token','user/profile/signup' ,
                     'shop/product/index','shop/product/category','shop/product/related',
-                    'shop/category/index'
+                    'shop/category/index','shop/category/get-brands'
                     ],
         'rules' => [
             [

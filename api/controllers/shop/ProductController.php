@@ -17,6 +17,16 @@ use yii\helpers\Url;
 use yii\rest\Controller;
 use yii\web\NotFoundHttpException;
 use api\helpers\DataHelper;
+use backend\forms\Shop\ProductSearch;
+use shop\forms\manage\Shop\Product\ProductCreateForm;
+use shop\useCases\manage\Shop\ProductManageService;
+use shop\forms\manage\Shop\Product\QuantityForm;
+use shop\forms\manage\Shop\Product\PhotosForm;
+use shop\forms\manage\Shop\Product\PriceForm;
+use shop\forms\manage\Shop\Product\ProductEditForm;
+use yii\data\ActiveDataProvider;
+use yii\filters\VerbFilter;
+use shop\entities\Shop\Product\Value;
 use Yii;
 
 class ProductController extends Controller
@@ -25,6 +35,7 @@ class ProductController extends Controller
     private $categories;
     private $brands;
     private $tags;
+    private $service;
 
     public function __construct(
         $id,
@@ -33,6 +44,7 @@ class ProductController extends Controller
         CategoryReadRepository $categories,
         BrandReadRepository $brands,
         TagReadRepository $tags,
+        ProductManageService $service,
         $config = []
     )
     {
@@ -41,6 +53,7 @@ class ProductController extends Controller
         $this->categories = $categories;
         $this->brands = $brands;
         $this->tags = $tags;
+        $this->service = $service;
     }
 
     protected function verbs(): array
@@ -52,6 +65,17 @@ class ProductController extends Controller
             'brand' => ['GET'],
             'tag' => ['GET'],
             'view' => ['GET'],
+
+            'create' => ['POST'],
+            'price' => ['PUT'],
+            'quantity' => ['PUT'],
+            'update' => ['PUT'],
+            'delete' => ['DELETE'],
+            'activate' => ['POST'],
+            'draft' => ['POST'],
+            'delete-photo' => ['POST'],
+            'move-photo-up' => ['POST'],
+            'move-photo-down' => ['POST'],
         ];
     }
 
@@ -200,6 +224,297 @@ class ProductController extends Controller
         $dataProvider = $this->products->getAllByTag($tag);
         return new MapDataProvider($dataProvider, [$this, 'serializeListItem']);
     }
+
+    public function actionCreate() {
+        $form = new ProductCreateForm();
+        // dd($_FILES);
+        // print_r(Yii::$app->request->post());die();
+        if($form->load(Yii::$app->request->post()))
+        {
+            if ($form->validate()) 
+            {
+                try {
+                    $product = $this->service->create($form);
+                    return [ 
+                        'status' => 200,
+                        'data'=>[
+                            'productCreate'=>$this->serializeView($product),
+                            
+                            ],
+                        'message' => '',
+                    ];
+                    return ;
+                } catch (\DomainException $e) {
+                    return [ 
+                        'status' => 400,
+                        'data'=>[
+                            'productCreate'=>[
+                                    'ProductErrors'=> $form->errors,
+                                    'QuantityErrors'=> $form->quantity->errors,
+                                    'CategoryErrors'=> $form->categories->errors,
+                                    'PriceErrors'=> $form->price->errors,
+                                    'PhotoErrors'=> $form->photos->errors,
+                                    'DomainException' => $e->getMessage(),
+                            ],
+                            
+                            ],
+                        'message' => 'Invalid Data',
+                    ];
+                }
+            }
+            return [ 
+                'status' => 400,
+                'errors'=> array_merge(
+                                    $form->errors,$form->quantity->errors,
+                                    $form->categories->errors,$form->price->errors,
+                                    $form->photos->errors
+                                    ),
+                    
+                    
+                'message' => 'Invalid Data',
+            ];
+        }
+        return [ 
+            'status' => 400,
+            'error'=>
+                [
+                    array_merge($form->errors,$form->quantity->errors,$form->categories->errors,$form->price->errors,$form->photos->errors)
+                ],
+                
+                
+            'message' => 'Post Data not loaded.',
+        ];
+    }
+
+    public function actionPrice($id)
+    {
+        $product = $this->findModel($id);
+
+        $form = new PriceForm($product);
+        if($form->load(Yii::$app->request->post())){
+            if ($form->validate()) {
+                try {
+                    $this->service->changePrice($product->id, $form);
+                    return [
+                        'status' => '200',
+                        'message' => 'Price Update Successfully',
+                    ];
+                } catch (\DomainException $e) {
+                    return [ 
+                        'status' => '400',
+                        'data'=>[
+                                'priceUpdate'=>[
+                                        'ProductPrice'=> null,
+                                        'PriceErrors'=> $e->getMessage(),
+                                ],
+                            ],
+                        'message' => 'Invalid Data',
+                    ];
+                }
+            }
+            return [ 
+                'status' => '400',
+                    'data'=>[
+                        'priceUpdate'=>[
+                                'ProductPrice'=> null,
+                                'PriceErrors'=> $form->errors
+                        ],
+                    ],
+                'message' => 'Invalid Data',
+            ];
+        }
+        return [ 
+            'status' => '400',
+                'data'=>[
+                    'priceUpdate'=>[
+                            'ProductPrice'=> null,
+                            'PriceErrors'=> 'Posted data not loaded in model'
+                    ],
+                ],
+            'message' => 'Invalid Data',
+        ];
+    }
+
+    /**
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionQuantity($id)
+    {
+        $product = $this->findModel($id);
+
+        $form = new QuantityForm($product);
+        if($form->load(Yii::$app->request->post())){
+            if ($form->validate()) {
+                try {
+                    $this->service->changeQuantity($product->id, $form);
+                    return [
+                        'status' => '200',
+                        'message' => 'Quantity Update Successfully',
+                    ];
+                } catch (\DomainException $e) {
+                    return [ 
+                        'status' => '400',
+                            'data'=>[
+                                'quantityUpdate'=>[
+                                        'ProductQuantity'=> null,
+                                        'QuantityErrors'=> $e->getMessage(),
+                                ],
+                            ],
+                        'message' => 'Invalid Data',
+                    ];
+                }
+            }
+            return [ 
+                'status' => '400',
+                    'data'=>[
+                        'quantityUpdate'=>[
+                                'ProductQuantity'=> null,
+                                'QuantityErrors'=> $form->errors
+                        ],
+                    ],
+                'message' => 'Invalid Data',
+            ];
+        }
+        return [ 
+            'status' => '400',
+                'data'=>[
+                    'quantityUpdate'=>[
+                            'ProductQuantity'=> null,
+                            'QuantityErrors'=> 'Posted data not loaded in model'
+                    ],
+                ],
+            'message' => 'Posted data not loaded in model',
+        ];
+    }
+
+    public function actionDelete($id)
+    {
+        try {
+            $this->service->remove($id);
+            return [
+                'status' => '200',
+                'message' => 'Product Delete Successfully',
+            ];
+        } catch (\DomainException $e) {
+            return [ 
+                'status' => '400',
+                    'data'=>[
+                        'quantityUpdate'=>[
+                                'Product'=> null,
+                                'ProductErrors'=> $e->getMessage(),
+                        ],
+                    ],
+                'message' => 'Invalid Data',
+            ];
+        }
+    }
+
+    public function actionUpdate($id)
+    {
+        $product = $this->findModel($id);
+
+        $form = new ProductEditForm($product);
+
+        if($form->load(Yii::$app->request->post()) ){
+            if ($form->validate()) {
+                try {
+                    $this->service->edit($product->id, $form);
+                    return [
+                        'status' => '200',
+                        'message' => 'Product Update Successfully',
+                    ];
+                } catch (\DomainException $e) {
+                    return [ 
+                        'status' => '400',
+                            'data'=>[
+                                'quantityUpdate'=>[
+                                        'Product'=> null,
+                                        'ProductErrors'=> $e->getMessage(),
+                                ],
+                            ],
+                        'message' => 'Invalid Data',
+                    ];
+                }
+            }
+            return [ 
+                'status' => '400',
+                    'data'=>[
+                        'quantityUpdate'=>[
+                                'Product'=> null,
+                                'ProductErrors'=> $form->errors,
+                                'MetaErrors' => $form->meta->errors,
+                                'CategoryErrors' => $form->categories->errors,
+                                'TagsErrors' => $form->tags->errors,
+                        ],
+                    ],
+                'message' => 'Invalid Data',
+            ];
+        }
+        return [ 
+            'status' => '400',
+                'data'=>[
+                    'quantityUpdate'=>[
+                            'Product'=> null,
+                            'ProductErrors'=> 'Posted data not loaded in model',
+                    ],
+                ],
+            'message' => 'Invalid Data',
+        ];
+    }
+
+    /**
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionActivate($id)
+    {
+        try {
+            $this->service->activate($id);
+            return [
+                'status' => '200',
+                'message' => 'Product Activate Successfully',
+            ];
+        } catch (\DomainException $e) {
+            return [ 
+                'status' => '400',
+                    'data'=>[
+                        'quantityUpdate'=>[
+                                'Product'=> null,
+                                'ProductErrors'=> $e->getMessage(),
+                        ],
+                    ],
+                'message' => 'Invalid Data',
+            ];
+        }
+    }
+
+    /**
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionDraft($id)
+    {
+        try {
+            $this->service->draft($id);
+            return [
+                'status' => '200',
+                'message' => 'Product Draft Successfully',
+            ];
+        } catch (\DomainException $e) {
+            return [ 
+                'status' => '400',
+                    'data'=>[
+                        'quantityUpdate'=>[
+                                'Product'=> null,
+                                'ProductErrors'=> $e->getMessage(),
+                        ],
+                    ],
+                'message' => 'Invalid Data',
+            ];
+        }
+    }
+
 
     /**
      * @SWG\Get(
@@ -401,6 +716,14 @@ class ProductController extends Controller
             $result["compareAtPrice"] = "";
         }
         return $result;
+    }
+
+    protected function findModel($id): Product
+    {
+        if (($model = Product::find()->where(['id' => $id, 'created_by' => \Yii::$app->user->id])->one()) !== null) {
+            return $model;
+        }
+        throw new NotFoundHttpException('The requested page does not exist.');
     }
 }
 

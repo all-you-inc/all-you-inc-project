@@ -131,6 +131,19 @@ class Order extends ActiveRecord
         return $this->current_status == Status::CANCELLED;
     }
 
+    public function getSalesCost()
+    {
+        $SalesCost = 0;
+        foreach($this->items as $item)
+        {
+            if( $item->product->created_by == \Yii::$app->user->id )
+            {
+                $SalesCost += $item->price;
+            }
+        }
+        return $SalesCost;
+    }
+
     private function addStatus($value): void
     {
         $this->statuses[] = new Status($value, time());

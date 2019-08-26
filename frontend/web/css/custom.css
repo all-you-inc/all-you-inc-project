@@ -1,3 +1,229 @@
+.title-calendar {
+    text-align: left;
+    font-weight: 600;
+    color: aliceblue;
+    padding-left: 10px;
+}
+.title-chart {
+    color: aliceblue;
+    padding: 10px;
+}
+.bg-teal-gradient {
+    background: -webkit-gradient(linear, left bottom, left top, color-stop(0, #39CCCC), color-stop(1, #7adddd)) !important;
+    color: #fff;
+    width: 95%;
+    margin: 0 auto;
+    border-radius: 10px;
+}
+.bg-teal-gradient1 {
+    background: #DBE33E;
+    color: #fff;
+    width: 95%;
+    margin: 10px auto;
+    border-radius: 10px;
+    padding-top: 10px;
+}
+.bg-teal-gradient2 {
+    background: #00C66B;
+    color: #fff;
+    width: 95%;
+    height: auto;
+    margin: 10px auto;
+    border-radius: 10px;
+    padding-top: 10px;
+    text-align: center;
+}
+.dashboard-rightbar-1 .item{
+    background: transparent;
+    color: aliceblue;
+    border-radius: calc(.25rem - 1px) calc(.25rem - 1px) 0 0;
+    margin: 0;
+    padding: 1.2rem 1.5rem;
+    border-radius: 0;
+    border-bottom: 1px solid aliceblue;
+    font-weight: 700;
+    line-height: 1.5;
+    text-transform: uppercase;
+}
+.dashboard-rightbar-1 .item .number {
+    color: aliceblue;
+    font-weight: 700;
+    display: inline-block;
+    margin-top: .1rem;
+    float: right;
+    font-size: 1.3rem;
+    text-transform: capitalize;
+}
+.dashboard-rightbar-1{
+    background-color: #9E97F6;
+    width: -webkit-fill-available;
+    height: 575px;
+    border-radius: 10px;
+}
+.dashboard-rightbar-2{
+    background-color: #2AA0C6;
+    width: -webkit-fill-available;
+    height: 575px;
+    border-radius: 10px;
+    margin-top: 18px;
+}
+.dashboard-rightbar-2 .item{
+    background: transparent;
+    color: aliceblue;
+    border-radius: calc(.25rem - 1px) calc(.25rem - 1px) 0 0;
+    margin: 0;
+    padding: 1.2rem 1.5rem;
+    border-radius: 0;
+    border-bottom: 1px solid aliceblue;
+    font-weight: 500;
+    font-size: small;
+    line-height: 1.5;
+}
+.dashboard-rightbar-2 .item .number {
+    color: aliceblue;
+    font-weight: 700;
+    display: inline-block;
+    margin-top: .1rem;
+    float: right;
+    font-size: 1.3rem;
+    text-transform: capitalize;
+}
+.box-header-rightbar-2{
+    color: aliceblue;
+    font-size: 2.4rem;
+    font-weight: bold;
+    padding: 1.2rem 1.5rem;
+    border-radius: 0;
+    border-bottom: 1px solid aliceblue;
+}
+.dashboard-container {
+    padding: 20px;    
+}
+.dashboard-info-box{
+    font-size: 2rem;
+    text-align: center;
+    display: block;
+    min-height: 90px;
+    width: 100%;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    border-radius: 2px;
+    margin-bottom: 15px;
+    background: #F4F4F2;
+}
+.dashboard-icon{
+    font-size: 4rem;
+    margin-top: 10px;
+    color: #43C8F3 !important;
+}
+.info-box-text{
+    text-transform: uppercase;
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sidemenu-intro {
+    background: #F9F9FB;
+    max-width: 85%;
+    text-align: center;
+    margin: 7% auto 1% auto;
+    padding: 10px 0 2px 0;
+    border-radius: 15px;
+    border: solid lightgray;
+    line-height: normal;
+}
+.sidemenu-profile-img{
+    border-radius: 50%;
+    margin: 0 auto 4px;
+    height: 150px;
+    width: 150px;
+    box-shadow: 3px 3px 20px rgba(0, 0, 0, 0.5);
+}
+.sidemenu-profile-name{
+    font-size: larger;
+    font-weight: bold;
+    color: #29343A;
+    display: block;
+}
+.sidemenu-profile-profession{
+    font-size: small;
+    font-weight: 600;
+    color: #3EB655;
+    display: block;
+}
+.sidemenu-profile-country{
+    font-weight: 600;
+    color: #29343A;
+}
+.portfolio-star{
+    font-size: 18px;
+}
+.portfolio-filled-star{
+    color: #EECD48;
+}
+.portfolio-hr{
+    border-top: 2px solid #29343A;
+}
+.portfolio-subtitle{
+    color: #29373A;
+}
+.portfolio-video {
+    background: #29373A;
+    max-height: -webkit-fill-available;
+}
+
+.port-intro-talent{
+    font-size: large;
+    font-weight: bold;
+    color: #29343A;
+    display:inline-block;
+    border-bottom:1px solid #EECD48;
+    padding-bottom:2px;
+    display: block;
+    width: fit-content;
+    margin: 0 auto;
+}
+.port-intro-name{
+    font-size: large;
+    font-weight: bold;
+    color: #29343A;
+    display: block;
+}
+.port-intro-rating{
+    font-size: larger;
+    font-weight: 600;
+    color: #29343A;
+    display: block;
+}
+.fan-btn {
+    font-weight: bold;
+    color: #fff;
+    background: #EECD48;
+    border-radius: 7px;
+    border: aliceblue;
+}
+.portfolio-intro {
+    background: #F9F9FB;
+    max-width: 25%;
+    max-height: -webkit-fill-available;
+    text-align: center;
+    margin: 7% auto 1% auto;
+    padding: 20px 0 20px 0;
+    border-radius: 15px;
+    border: solid lightgray;
+}
+.portfolio-profile-img{
+    border-radius: 50%;
+    position: absolute; 
+    margin: 4% auto;
+    left: 43%;
+    max-width: 200px !important;
+    max-height: 200px !important;
+    box-shadow: 3px 3px 20px rgba(0, 0, 0, 0.5);
+    z-index: 1; 
+}
 .font-weight{
     font-weight: bold !important;
 }
@@ -56,7 +282,7 @@
 .dropdown-toggle{
     color: #646a70 !important;
 }
-/*Profile Card CSS start*/
+/*Profile Card CSS start
 .profile-card-3 {
     font-family: 'Open Sans', Arial, sans-serif;
     position: relative;
@@ -176,7 +402,7 @@
 .pricingTable .pricing-content{
     padding: 50px 0 30px;
     position: relative;
-    
+
 }
 .pricingTable .title{
     font-size: 35px;

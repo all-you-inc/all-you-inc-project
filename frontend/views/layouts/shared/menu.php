@@ -11,7 +11,6 @@ if (\yii\helpers\Url::home() == Yii::$app->request->url) {
 } else {
     $class = 'header custom-yellow-header';
 }
-
 ?> 
 
 <header class="<?= $class ?>">
@@ -55,7 +54,8 @@ if (\yii\helpers\Url::home() == Yii::$app->request->url) {
                                                             ?>
                                                         </ul>
                                                     </div><!-- End .col-lg-6 -->
-                                                <?php }
+                                                    <?php
+                                                }
                                             }
                                             ?>
                                         </div><!-- End .row -->
@@ -107,7 +107,7 @@ if (\yii\helpers\Url::home() == Yii::$app->request->url) {
                                                     <li><a href="">Item 2.4</a></li>
                                                 </ul>
                                             </div><!-- End .col-lg-4 -->
-                                           <div class="col-lg-4">
+                                            <div class="col-lg-4">
                                                 <div class="menu-title">
                                                     <a href="#">Category 3</a>
                                                 </div>
@@ -152,11 +152,10 @@ if (\yii\helpers\Url::home() == Yii::$app->request->url) {
                             <ul>
                                 <?php if (Yii::$app->user->isGuest): ?>
                                     <li><a class="menu" href="<?= Html::encode(Url::to(['/auth/auth/login'])) ?>">Login</a></li>
-<?php else: ?>
-                                    <li><a class="menu" href="<?= Html::encode(Url::to(['/cabinet/order/index'])) ?>">My Orders</a></li>
-                                    <li><a class="menu" href="<?= Html::encode(Url::to(['/auth/signup/myprofile'])) ?>">My Profile</a></li>
+                                <?php else: ?>
+                                    <li><a class="menu" href="<?= Html::encode(Url::to(['/dashboard'])) ?>">Dashboard</a></li>
                                     <li><a class="menu" href="<?= Html::encode(Url::to(['/auth/auth/logout'])) ?>" data-method="post">Logout</a></li>
-<?php endif; ?>
+                                <?php endif; ?>
 
                             </ul>
                         </li>
@@ -165,7 +164,7 @@ if (\yii\helpers\Url::home() == Yii::$app->request->url) {
                     </ul>
                 </nav>
                 <!---- cart view ---->             
-<?= CartWidget::widget() ?>
+                <?= CartWidget::widget() ?>
 
 
             </div><!-- End .header-dropdowns -->

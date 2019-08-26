@@ -24,13 +24,17 @@ $this->params['breadcrumbs'][] = $this->title;
                 <h2 class="title">Register</h2>
             </div> 
             <?php $form = ActiveForm::begin(['id' => 'form-signup']); ?>
-            <?= $form->field($model, 'name')->textInput(['autofocus' => true]) ?>
+            <?= $form->field($model, 'name')->textInput(['autofocus' => true])->label('Full Name') ?>
             <?= $form->field($model, 'email') ?>
             <?= $form->field($model, 'password')->passwordInput() ?>
+            <?= $form->field($model, 'rePassword')->passwordInput() ?>
+            <?= $form->field($model, 'reCaptcha')->widget(
+                \himiklab\yii2\recaptcha\ReCaptcha::className(),
+                ['siteKey' => \Yii::$app->params['reCaptcha']['site-key']]
+            ) ?>
             <div class="form-footer">
                 <?= Html::submitButton('Register', ['class' => 'btn btn-primary', 'name' => 'signup-button']) ?>
             </div> 
-            <?= $form->errorSummary($model) ?>
             <?php ActiveForm::end(); ?>
         </div>
     </div>

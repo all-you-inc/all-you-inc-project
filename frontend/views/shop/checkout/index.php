@@ -45,8 +45,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="panel panel-default">
                             <div class="panel-heading">Customer</div>
                             <div class="panel-body">
-                                <?= $form->field($model->customer, 'phone')->textInput() ?>
-                                <?= $form->field($model->customer, 'name')->textInput() ?>
+                                <?= $form->field($model->customer, 'phone')->textInput(['value' => \Yii::$app->user->identity->getUser()->phone]) ?>
+                                <?= $form->field($model->customer, 'name')->textInput(['value' => \Yii::$app->user->identity->getUser()->name]) ?>
                             </div>
                         </div>
 
@@ -64,7 +64,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         if ($user_addresses) {
                                             foreach ($user_addresses as $user_address) {
                                                 ?>
-                                                <option value="<?= $user_address->id ?>"><?= $user_address->address ?></option>
+                                                <option <?= $user_address->default == 1 ? 'selected' :  '' ?> value="<?= $user_address->id ?>"><?= $user_address->address ?></option>
                                             <?php
                                             }
                                         }

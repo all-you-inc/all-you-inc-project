@@ -17,6 +17,8 @@ class UserAddressService {
             case 'get':
                 if ($address_id == null) {
                     $user_addresses = UserAddress::findAll(['user_id' => $user_id,'is_deleted' => 0]);
+                }else if($address_id != null && $user_id != null) {
+                    $user_addresses = UserAddress::find()->where(['user_id' => $user_id,'is_deleted' => 0,'id'=> $address_id])->one();
                 } else {
                     $user_addresses = UserAddress::findOne($address_id);
                 }
@@ -55,9 +57,9 @@ class UserAddressService {
 
             case 'delete':
              if ($address_id == null) {
-                    $user_addresses =  UserAddress::updateAll(['is_deleted' => 1], ['user_id' => $user_id]);
+                    return $user_addresses =  UserAddress::updateAll(['is_deleted' => 1], ['user_id' => $user_id]);
                 } else {
-                    $user_addresses =  UserAddress::updateAll(['is_deleted' => 1], ['id' => $address_id]);
+                    return $user_addresses =  UserAddress::updateAll(['is_deleted' => 1], ['id' => $address_id]);
                 }
 
             default:

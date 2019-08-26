@@ -16,6 +16,8 @@ use common\services\InstrumentService;
 use common\services\InstrumentDefinition;
 use common\services\InstrumentSpecificationService;
 use common\services\InstrumentSpecificationDefinition;
+use common\models\useraddress\UserAddress;
+use common\services\UserAddressService;
 use common\models\usertalent\UserTalent;
 use shop\helpers\UserHelper;
 use yii\helpers\Url;
@@ -169,6 +171,169 @@ class ProfileController extends Controller
         ];
     }
 
+    public function actionGetCountries(){
+        $AllCountries = UserAddressService::getCountries();
+        $CountriesArr = [];
+        foreach($AllCountries as $country){
+            $countryArr = [
+                'id' => $country->id,
+                'country_name' => $country->title,
+            ];
+
+            array_push($CountriesArr,$countryArr);
+        }
+        return $CountriesArr;
+    }
+
+    public function actionAddAddress() {
+
+        $model = new UserAddress;
+        if (Yii::$app->request->post()) {
+            $result = UserAddressService::userAddress('post', \Yii::$app->user->id, null, $model, Yii::$app->request->post());
+            if ($result) {
+                return [
+                    'status' => '201',
+                    'message' => 'Address Added successfully',
+                ];
+            }
+            return [ 
+                'status' => '400',
+                'data'=>[
+                    'profileUpdate'=>[
+                            'Address'=> null,
+                            'AddressErrors'=>$model->getErrors()
+                     ],
+                    
+                    ],
+                'message' => 'Invalid Data',
+            ];
+        }
+        return [ 
+            'status' => '400',
+            'data'=>[
+                'profileUpdate'=>[
+                        'Address'=> null,
+                        'AddressErrors'=> null
+                 ],
+                
+                ],
+            'message' => 'No Data Found',
+        ];
+    }
+
+    public function actionGetAddress(){
+        $userAddressArr = [];
+        $userAddress = UserAddressService::userAddress('get', \Yii::$app->user->id);
+        foreach($userAddress as $address){
+            $addressArr = [
+                'id' => $address->id,
+                'country' => [
+                    'id' => $address->country->id,
+                    'country_name' => $address->country->title
+                ],
+                'state' => $address->state,
+                'city' => $address->city,
+                'area' => $address->area,
+                'postal_code' => $address->postal_code,
+                'address' => $address->address,
+                'default' => $address->default
+            ];
+            array_push($userAddressArr,$addressArr);
+        }
+        return $userAddressArr;
+    }
+
+    public function actionDeleteAddress($id){
+        $model = UserAddressService::userAddress('get', \Yii::$app->user->id, $id);
+        if($model == NULL || $model->is_deleted == 1){
+            return [ 
+                'status' => '400',
+                'data'=>[
+                    'profileUpdate'=>[
+                            'Address'=> null,
+                            'AddressErrors'=> null
+                     ],
+                    
+                    ],
+                'message' => 'User Address Not Found',
+            ];
+        }
+        
+        $result = UserAddressService::userAddress('delete', null, $id);
+
+        if ($result) {
+            return [
+                'status' => '201',
+                'message' => 'Address Deleted successfully',
+            ];
+        }
+        return [ 
+            'status' => '400',
+            'data'=>[
+                'profileUpdate'=>[
+                        'Address'=> null,
+                        'AddressErrors'=> 'User Address Not Found'
+                 ],
+                
+                ],
+            'message' => 'Invalid Data',
+        ];
+
+    }
+
+    public function actionUpdateAddress($id){
+        $model = UserAddressService::userAddress('get', \Yii::$app->user->id, $id);
+        if (Yii::$app->request->post()) {
+
+            if($model == NULL || $model->is_deleted == 1){
+                return [ 
+                    'status' => '400',
+                    'data'=>[
+                        'profileUpdate'=>[
+                                'Address'=> null,
+                                'AddressErrors'=> null
+                         ],
+                        
+                        ],
+                    'message' => 'User Address Not Found',
+                ];
+            }
+
+
+
+            $result = UserAddressService::userAddress('put', \Yii::$app->user->id, null, $model, Yii::$app->request->post());
+            if ($result) {
+                return [
+                    'status' => '201',
+                    'message' => 'Address Updated successfully',
+                ];
+            }
+            return [ 
+                'status' => '400',
+                'data'=>[
+                    'profileUpdate'=>[
+                            'Address'=> null,
+                            'AddressErrors'=>$model->getErrors()
+                     ],
+                    
+                    ],
+                'message' => 'Invalid Data',
+            ];
+        }
+        return [ 
+            'status' => '400',
+            'data'=>[
+                'profileUpdate'=>[
+                        'Address'=> null,
+                        'AddressErrors'=> null
+                 ],
+                
+                ],
+            'message' => 'No Data Found',
+        ];
+    }
+
+
     public function actionProfile() {
         $userTalent = UserTalent::find()->where(['user_id' => \Yii::$app->user->id])->one();
 
@@ -287,6 +452,24 @@ class ProfileController extends Controller
                 'code' => $user->status,
                 'name' => UserHelper::statusName($user->status),
             ],
+            'membership' => [
+                "id"=> $user->userMembership->id,
+                "plan" => [
+                  'id' => $user->userMembership->membership->id,
+                  'title' => $user->userMembership->membership->title,  
+                ],
+            ],
+            'talent' => [
+                "id" => $user->userTalent->id,
+                "industry"=> $user->userTalent->industry,
+                "talent_master" => $user->userTalent->talent,
+                "gender" => $user->userTalent->gender,
+                "dj_genre" => $user->userTalent->djgenre,
+                "instrument" => $user->userTalent->instrument,
+                "instrument_spec" => $user->userTalent->instrumentspecification,
+                "music_genre" => $user->userTalent->musicgenre,
+            ],
+            'update_talent_profile' => $user->canUpdateProfile(),
         ];
     }
 }
