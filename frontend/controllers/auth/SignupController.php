@@ -16,9 +16,10 @@ use common\services\MusicGenreService;
 use common\models\usertalent\UserTalent;
 use shop\entities\User\User;
 use common\models\membership\Membership;
-use common\models\usermembership\UserMembership;
+use common\models\usersubscription\UserSubscription;
 use common\models\useraddress\UserAddress;
 use common\services\UserAddressService;
+use common\services\UserPaymentService;
 
 class SignupController extends Controller {
 
@@ -63,24 +64,6 @@ private function actionPlancolors() {
     return $color;
 }
 
-private function actionCreateplan($plan_id, $email) {
-    $user = User::find()->where(['email' => $email])->one();
-    $plan = Membership::findOne($plan_id);
-    $time = time();
-    $model = new UserMembership;
-    $model->user_id = $user->id;
-    $model->membership_id = $plan_id;
-    $model->status = 'active';
-    $model->category = $plan->category;
-    $model->created_at = $time;
-    $model->created_by = $user->id;
-    $model->modified_at = $time;
-    $model->modified_by = $user->id;
-    if ($model->save()) {
-        return TRUE;
-    }
-}
-
 public function actionRequest($plan_id) {
     $this->layout = 'main';
     $form = new SignupForm;
@@ -89,9 +72,11 @@ public function actionRequest($plan_id) {
         if ($form->validate()) {
             try {
                 $this->service->signup($form);
-                $this->actionCreateplan($plan_id, $form->email);
-                Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
-                return $this->goHome();
+                $payment = $this->actionPayment($plan_id, $form->email);
+                if ($payment) {
+                    Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
+                    return $this->goHome();
+                }
             } catch (\DomainException $e) {
                 Yii::$app->errorHandler->logException($e);
                 Yii::$app->session->setFlash('error', $e->getMessage());
@@ -101,6 +86,32 @@ public function actionRequest($plan_id) {
     return $this->render('request', [
                 'model' => $form,
     ]);
+}
+
+private function actionPayment($membership_id, $email) {
+    $this->layout = 'main';
+    $paymentGateway = UserPaymentService::paymentGateway($user_subscription);
+    if ($paymentGateway) {
+        $user = User::find()->where(['email' => $email])->one();
+        $membership = Membership::findOne($membership_id);
+        $user_subscription = UserPaymentService::createSubscription('membership', $membership_id, $user->id);
+        if ($user_subscription) {
+            $params = [];
+            $params['user_id'] = $user->id;
+            $params['amount'] = $membership->price;
+            $params['currency_id'] = $membership->currency_id;
+            $params['type'] = 'subscription';
+            $params['ref_id'] = $user_subscription->id;
+            if (isset($paymentGateway['transection_id'])) {
+                $params['transection_id'] = $membership->currency_id;
+                $params['status'] = 1;
+            }
+            $payment = UserPaymentService::createPayment($params);
+            if ($payment) {
+                return TRUE;
+            }
+        }
+    }
 }
 
 // $token = User Email token
@@ -170,9 +181,8 @@ public function actionProfile($auth_key) {
     ]);
 }
 
-
 public function actionGettalent() {
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
     $insdustry_id = isset(Yii::$app->request->post()['id']) ? Yii::$app->request->post()['id'] : '-';
     if ($insdustry_id != null || $insdustry_id != '') {
         $talents = TalentMasterService::getTalentMasterRecordByIndustryId($insdustry_id);
@@ -192,7 +202,7 @@ public function actionGettalent() {
 }
 
 public function actionGetdjgenre() {
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
     $djgenres = DjGenreService::getAll();
     $count = 0;
     $dd = '<select class="form-control" name="dj_genre_id" id="selected-dj_genre">';
@@ -207,7 +217,7 @@ public function actionGetdjgenre() {
 }
 
 public function actionGetmusic_genre() {
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
     $music_genres = MusicGenreService::getAll();
     $count = 0;
     $dd = '<select class="form-control" name="music_genre_id" id="selected-music_genre">';
@@ -222,7 +232,7 @@ public function actionGetmusic_genre() {
 }
 
 public function actionGetinstrument() {
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
     $instruments = InstrumentService::getAll();
     $count = 0;
     $dd = '<select class="form-control" name="instrument_id" onchange="getinstrumentspec(this.value)" id="selected-instrument">';
@@ -237,7 +247,7 @@ public function actionGetinstrument() {
 }
 
 public function actionGetinstrumentspec() {
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
     $instrument_id = isset(Yii::$app->request->post()['id']) ? Yii::$app->request->post()['id'] : '-';
     if ($instrument_id != null || $instrument_id != '-') {
         $instrument_specs = InstrumentSpecificationService::getInstrumentSpecificationRecordByInstrumentId($instrument_id);
@@ -255,7 +265,7 @@ public function actionGetinstrumentspec() {
 }
 
 public function actionGetgenderstatus() {
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
     $insdustry_id = isset(Yii::$app->request->post()['id']) ? Yii::$app->request->post()['id'] : '-';
     $gender_status = IndustryService::getIndusteryGenderFieldStatus($insdustry_id);
     return $gender_status;

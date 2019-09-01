@@ -3,6 +3,7 @@
 use common\models\usertalent\UserTalent;
 use yii\helpers\Html;
 use yii\helpers\Url;
+use common\models\userprofileimage\UserProfileImage;
 
 $spotlight = UserTalent::find()->limit(4)->orderBy('id DESC')->all();
 ?>
@@ -19,8 +20,10 @@ $spotlight = UserTalent::find()->limit(4)->orderBy('id DESC')->all();
                         <div class="col-md-3">
                             <div class="card profile-card-3">
                                 <div class="background-block">
-                                    <img src="<?= Yii::getAlias('@web/images/spotlight/banner-1.jpg') ?>" alt="profile" class="background"/>
-                                    <img src="<?= Yii::getAlias('@web/images/spotlight/profile-1.jpg') ?>" alt="profile-image" class="profile"/>
+                                    <?php $imageprofile = UserProfileImage::getProfileImage($item->user->id); ?>
+                                    <?php $imageBanner = UserProfileImage::getBannerImage($item->user->id); ?>
+                                    <img src="<?= $imageBanner == NULL ? Yii::getAlias('@web/images/spotlight/banner.jpg') : $imageBanner  ?>" alt="profile" class="background"/>
+                                    <img src="<?=  $imageprofile == NULL ? Yii::getAlias('@web/images/spotlight/profile-1.png') : $imageprofile  ?>" alt="profile-image" class="sidemenu-profile-img"/>
                                 </div>
                                 <div class="card-content">
                                     <h2><?= $item->user->name ?></h2>

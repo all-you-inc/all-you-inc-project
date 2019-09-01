@@ -189,17 +189,20 @@ class ProfileController extends Controller
 
         $model = new UserAddress;
         if (Yii::$app->request->post()) {
-            $result = UserAddressService::userAddress('post', \Yii::$app->user->id, null, $model, Yii::$app->request->post());
+            $result = UserAddressService::userAddress('post', \Yii::$app->user->id, null, 
+                                                        $model, Yii::$app->request->post());
             if ($result) {
                 return [
                     'status' => '201',
                     'message' => 'Address Added successfully',
+                    'customerAddressCreate'=> 
+                                ['customerAddress' => $result ],
                 ];
             }
             return [ 
                 'status' => '400',
                 'data'=>[
-                    'profileUpdate'=>[
+                    'customerAddressCreate'=>[
                             'Address'=> null,
                             'AddressErrors'=>$model->getErrors()
                      ],
@@ -211,7 +214,7 @@ class ProfileController extends Controller
         return [ 
             'status' => '400',
             'data'=>[
-                'profileUpdate'=>[
+                'customerAddressCreate'=>[
                         'Address'=> null,
                         'AddressErrors'=> null
                  ],
@@ -221,9 +224,10 @@ class ProfileController extends Controller
         ];
     }
 
-    public function actionGetAddress(){
+    public function actionGetAddress($uid=''){
         $userAddressArr = [];
-        $userAddress = UserAddressService::userAddress('get', \Yii::$app->user->id);
+        $uid = ($uid!='')?$uid:\Yii::$app->user->id;
+        $userAddress = UserAddressService::userAddress('get', $uid);
         foreach($userAddress as $address){
             $addressArr = [
                 'id' => $address->id,
@@ -231,6 +235,9 @@ class ProfileController extends Controller
                     'id' => $address->country->id,
                     'country_name' => $address->country->title
                 ],
+                'first_name' => $address->first_name,
+                'last_name' => $address->last_name,
+                'phone_number' => $address->phone_number,
                 'state' => $address->state,
                 'city' => $address->city,
                 'area' => $address->area,
@@ -289,7 +296,7 @@ class ProfileController extends Controller
                 return [ 
                     'status' => '400',
                     'data'=>[
-                        'profileUpdate'=>[
+                        'customerAddressUpdate'=>[
                                 'Address'=> null,
                                 'AddressErrors'=> null
                          ],
@@ -306,12 +313,16 @@ class ProfileController extends Controller
                 return [
                     'status' => '201',
                     'message' => 'Address Updated successfully',
+                    'customerAddressUpdate'=> 
+                                ['customerAddress' => $result ,
+                                'customer' => $this->serializeUser($this->findModel()) ],
+                               
                 ];
             }
             return [ 
                 'status' => '400',
                 'data'=>[
-                    'profileUpdate'=>[
+                    'customerAddressUpdate'=>[
                             'Address'=> null,
                             'AddressErrors'=>$model->getErrors()
                      ],
@@ -323,7 +334,7 @@ class ProfileController extends Controller
         return [ 
             'status' => '400',
             'data'=>[
-                'profileUpdate'=>[
+                'customerAddressUpdate'=>[
                         'Address'=> null,
                         'AddressErrors'=> null
                  ],
@@ -386,9 +397,9 @@ class ProfileController extends Controller
         
 
         $form = new SignupForm;
-        
+        $form->scenario = 'api';
         if(Yii::$app->request->post()){
-            $form = $this->service->setForm(Yii::$app->request->post());
+            $form = $this->service->setForm(Yii::$app->request->post(),$form->scenario);
             if ($form->validate()) {
                 try {
                     $this->service->signup($form);
@@ -438,8 +449,20 @@ class ProfileController extends Controller
         return User::findOne(\Yii::$app->user->id);
     }
 
+    private function getDefaultAddress($addresses){
+        foreach($addresses as $address){
+            if($address['default']===1){
+                return $address;
+            }
+        }
+        return null;
+    }
+
     private function serializeUser(User $user): array
     {
+        
+        $addresses = $this->actionGetAddress($user->id);
+        $defaultAddress = $this->getDefaultAddress($addresses);
         return [
             'id' => $user->id,
             'name' => $user->name,
@@ -453,12 +476,17 @@ class ProfileController extends Controller
                 'name' => UserHelper::statusName($user->status),
             ],
             'membership' => [
-                "id"=> $user->userMembership->id,
+                "id"=> $user->userSubscription('membership')[0]->id,
+//                "id" => $user->userMembership->id,
                 "plan" => [
-                  'id' => $user->userMembership->membership->id,
-                  'title' => $user->userMembership->membership->title,  
+//                  'id' => $user->userMembership->membership->id,
+                  'id' => $user->userSubscription('membership')[0]->ref_id,
+                  'title' => 'ALL TALENT',  
+//                  'title' => $user->userMembership->membership->title,  
                 ],
             ],
+            'addresses'=> $addresses,
+            'defaultAddress' => $defaultAddress,
             'talent' => [
                 "id" => $user->userTalent->id,
                 "industry"=> $user->userTalent->industry,

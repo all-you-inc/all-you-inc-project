@@ -8,7 +8,7 @@ use Yii;
 use yii\web\Controller;
 use yii\web\User;
 use shop\forms\auth\LoginForm;
-use common\models\usermembership\UserMembership;
+use common\models\usersubscription\UserSubscription;
 use common\models\usertalent\UserTalent;
 
 class AuthController extends Controller {
@@ -49,12 +49,14 @@ class AuthController extends Controller {
     }
 
     private function actionTalentprofile($user) {
-        $user_plan = UserMembership::find()->where(['user_id' => $user->id])->one();
-        if (isset($user_plan->membership_id) && $user_plan->membership_id == 1) { //for Talent type membership
+//        dd($user->getSubscription('membership')[0]->ref_id);
+        if (isset($user->getSubscription('membership')[0]->ref_id) && $user->getSubscription('membership')[0]->ref_id == 1) { //for Talent type membership
             $check = UserTalent::find()->where(['user_id' => $user->id])->one();
             if (!$check instanceof UserTalent) {
-                Yii::$app->session->setFlash('success', 'Successfully login, please update your profile.');
-                Yii::$app->user->setReturnUrl(['auth/signup/profile', 'auth_key' => $user->auth_key]);
+                Yii::$app->session->setFlash('success', 'Successfully login, please update your talent profile.');
+                Yii::$app->user->setReturnUrl(['addtalent']);
+            } else {
+                Yii::$app->session->setFlash('success', 'Successfully login.');
             }
         }
     }

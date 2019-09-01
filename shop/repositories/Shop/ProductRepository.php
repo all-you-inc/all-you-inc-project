@@ -19,7 +19,7 @@ class ProductRepository
 
     public function get($id): Product
     {
-        if (!$product = Product::find()->where(['id' => $id ,'created_by' => \Yii::$app->user->id])->one()) {
+        if (!$product = Product::find()->where(['id' => $id ])->one()) {
             throw new NotFoundException('Product is not found.');
         }
         return $product;

@@ -47,7 +47,15 @@ class SignupForm extends Model
             ['rePassword', 'required'],
             ['rePassword', 'compare', 'compareAttribute'=>'password', 'message'=>"Passwords don't match" ],
         
-            [['reCaptcha'], \himiklab\yii2\recaptcha\ReCaptchaValidator::className(), 'secret' => \Yii::$app->params['reCaptcha']['secret-key']]
+            [['reCaptcha'], \himiklab\yii2\recaptcha\ReCaptchaValidator::className(), 'secret' => \Yii::$app->params['reCaptcha']['secret-key']],
+            
+            [['name', 'email', 'password','rePassword','username','reCaptcha'], 'required', 'on' => 'frontend'],
         ];
+    }
+
+    public function scenarios() {
+        $scenarios = parent::scenarios();
+        $scenarios['api'] = ['name','email','username','password','rePassword'];
+	    return $scenarios;
     }
 }

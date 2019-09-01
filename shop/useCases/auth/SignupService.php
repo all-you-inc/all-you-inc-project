@@ -58,14 +58,18 @@ class SignupService
         $this->users->save($user);
     }
 
-    public function setForm($getPostData){
+    public function setForm($getPostData , $scenario = null){
         $form = new SignupForm();
+        $form->scenario = $scenario == null ? 'frontend' : $scenario;
         $form->username = $getPostData['SignupForm']['email'];
         $form->email = $getPostData['SignupForm']['email'];
         $form->name = $getPostData['SignupForm']['name'];
         $form->password = $getPostData['SignupForm']['password'];
         $form->rePassword = $getPostData['SignupForm']['rePassword'];
-        $form->reCaptcha = $getPostData['SignupForm']['reCaptcha'];
+        if($scenario == null || $scenario == 'frontend')
+        {
+            $form->reCaptcha = $getPostData['SignupForm']['reCaptcha'];
+        }
         return $form;
     }
 }

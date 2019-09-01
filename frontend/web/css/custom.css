@@ -1,3 +1,7 @@
+.talent-number{
+    font-weight: 600;
+    color: drakgray;
+}
 .title-calendar {
     text-align: left;
     font-weight: 600;
@@ -139,6 +143,7 @@
     margin: 0 auto 4px;
     height: 150px;
     width: 150px;
+    object-fit: cover;
     box-shadow: 3px 3px 20px rgba(0, 0, 0, 0.5);
 }
 .sidemenu-profile-name{
@@ -221,6 +226,7 @@
     left: 43%;
     max-width: 200px !important;
     max-height: 200px !important;
+    object-fit: cover;
     box-shadow: 3px 3px 20px rgba(0, 0, 0, 0.5);
     z-index: 1; 
 }
@@ -298,10 +304,11 @@
     width: 100%;
     height: 200px;
     /*overflow: hidden;*/
-}
-.profile-card-3 .background-block .background {
+/* } */
+.background {
     width: 100%;
-    height: -webkit-fill-available;
+    height: 200px;
+    object-fit:cover;
 }
 .profile-card-3 .card-content {
     width: 100%;
@@ -467,6 +474,35 @@
     background: #fff;
     box-shadow:0 0 10px #db2c29, 0 0 10px #000 inset;
 }
+
+.custom-icon-hide {
+    display: none;
+}
+
+.show-on-custom-link:hover .custom-icon-hide {
+    display: block;
+}
+
+.container-custom-upload {
+    position: relative;
+}
+
+.btn-custom-upload {
+    position: absolute;
+    top: 90%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    background-color: #ffc107;
+    color: white;
+    font-size: 10px;
+    padding: 4px 8px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    text-align: center;
+}
+
 @media only screen and (max-width: 990px){
     .pricingTable{ margin-bottom: 30px; }
 }

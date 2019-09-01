@@ -12,7 +12,7 @@ class AppAsset extends AssetBundle {
     public function __construct()
     {
         $search = '/shop/product/view';
-        $this->js = ( \Yii::$app->request->url ==  '/shop/product/create' || preg_match('/\/shop\/product\/view/',\Yii::$app->request->url) ) ? [
+        $this->js = ( \Yii::$app->request->url ==  '/addproduct' || preg_match('/\/shop\/product\/view/',\Yii::$app->request->url) ) ? [
             'js/bootstrap.bundle.min.js',
             'js/plugins.min.js',
             'js/main.min.js',

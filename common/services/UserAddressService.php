@@ -16,9 +16,9 @@ class UserAddressService {
         switch ($type) {
             case 'get':
                 if ($address_id == null) {
-                    $user_addresses = UserAddress::findAll(['user_id' => $user_id,'is_deleted' => 0]);
-                }else if($address_id != null && $user_id != null) {
-                    $user_addresses = UserAddress::find()->where(['user_id' => $user_id,'is_deleted' => 0,'id'=> $address_id])->one();
+                    $user_addresses = UserAddress::findAll(['user_id' => $user_id, 'is_deleted' => 0]);
+                } else if ($address_id != null && $user_id != null) {
+                    $user_addresses = UserAddress::find()->where(['user_id' => $user_id, 'is_deleted' => 0, 'id' => $address_id])->one();
                 } else {
                     $user_addresses = UserAddress::findOne($address_id);
                 }
@@ -36,7 +36,7 @@ class UserAddressService {
                         UserAddress::updateAll(['default' => 0], ['user_id' => $user_id]);
                     }
                     if ($model->save()) {
-                        return TRUE;
+                        return $model;
                     }
                 }
                 return FALSE;
@@ -50,16 +50,16 @@ class UserAddressService {
                         UserAddress::updateAll(['default' => 0], ['user_id' => $user_id]);
                     }
                     if ($model->update()) {
-                        return TRUE;
+                        return $model;
                     }
                 }
                 return FALSE;
 
             case 'delete':
-             if ($address_id == null) {
-                    return $user_addresses =  UserAddress::updateAll(['is_deleted' => 1], ['user_id' => $user_id]);
+                if ($address_id == null) {
+                    return $user_addresses = UserAddress::updateAll(['is_deleted' => 1], ['user_id' => $user_id]);
                 } else {
-                    return $user_addresses =  UserAddress::updateAll(['is_deleted' => 1], ['id' => $address_id]);
+                    return $user_addresses = UserAddress::updateAll(['is_deleted' => 1], ['id' => $address_id]);
                 }
 
             default:

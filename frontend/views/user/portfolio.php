@@ -8,6 +8,7 @@ use yii\helpers\Url;
 use frontend\widgets\Shop\FeaturedProductsWidget;
 use frontend\widgets\Shop\FeaturedPortfolioProducts;
 use frontend\widgets\Shop\PortfolioProducts;
+use common\models\userprofileimage\UserProfileImage;
 
 $this->title = 'Portfolio';
 $this->params['breadcrumbs'][] = $this->title;
@@ -15,11 +16,36 @@ $this->params['breadcrumbs'][] = $this->title;
 //dd($talent->user->country);
 ?>
 <main class="main">
-    <div class="banner banner-cat" style="background-image: url('<?= Yii::getAlias('@web/images/banners/portfolio.jpg') ?>');position: static;">
-        <div>
-            <img src="<?= Yii::getAlias('@web/images/spotlight/profile-1.jpg') ?>" alt="profile-image" class="portfolio-profile-img"/>        
-        </div>
+    <?php $imageBanner = UserProfileImage::getBannerImage($talent->user->id); ?>
+    <?php $image = UserProfileImage::getProfileImage($talent->user->id) ?>
+
+    <?php if($talent->user->id == \Yii::$app->user->id) {?>
+    <div class="container-fluid banner banner-cat" style="background-image: url('<?= ($imageBanner == null) ? Yii::getAlias('@web/images/banners/portfolio.jpg') : $imageBanner ?>');position: static;">
+        <form id="profilefileupload" action="<?= yii\helpers\Url::to(['user/uploadprofile']);?>" method="POST" enctype="multipart/form-data"> 
+            <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
+            <a href="#" onclick="javascript:$('#profilefileupload input').click();" class="show-on-custom-link" aria-label="Upload profile">
+                <img src="<?= ($image == null) ? Yii::getAlias('@web/images/spotlight/profile-1.png') : $image ?>" alt="profile-image" class="portfolio-profile-img"/>    
+            </a>
+            <input type="file" name="PhotosForm[files]" id="filespro" style="display:none;">      
+        </form>     
     </div>
+    
+    <div class="container">
+        <form id="bannerfileupload" action="<?= yii\helpers\Url::to(['user/uploadbanner']);?>" method="POST" enctype="multipart/form-data"> 
+            <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
+            <a href="#" onclick="javascript:$('#bannerfileupload input').click();" class="show-on-custom-link" aria-label="Upload banner">
+                <div class="btn btn-primary">Upload Banner Image</div>   
+            </a>
+            <input type="file" name="PhotosForm[files]" id="filesban" style="display:none;">      
+        </form> 
+    </div>
+    <?php }else{ ?>
+        <div class="container-fluid banner banner-cat" style="background-image: url('<?= ($imageBanner == null) ? Yii::getAlias('@web/images/banners/portfolio.jpg') : $imageBanner ?>');position: static;">
+            <div>
+                <img src="<?= ($image == null) ? Yii::getAlias('@web/images/spotlight/profile-1.png') : $image ?>" alt="profile-image" class="portfolio-profile-img"/>     
+            </div>
+        </div>
+    <? } ?>
     <div class="container">
         <div class="portfolio-intro">
             <span class="port-intro-name"><?= Html::encode($talent->user->name) ?></span>
@@ -62,3 +88,14 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </main>
 <!-- End .main -->
+<script>
+$('#filespro').change(function() {
+  // submit the form 
+      $('#profilefileupload').submit();
+  });
+
+ $('#filesban').change(function() {
+  // submit the form 
+      $('#bannerfileupload').submit();
+  });
+</script>

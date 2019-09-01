@@ -6,9 +6,10 @@ use lhs\Yii2SaveRelationsBehavior\SaveRelationsBehavior;
 use shop\entities\AggregateRoot;
 use shop\entities\User\events\UserSignUpConfirmed;
 use shop\entities\User\events\UserSignUpRequested;
-use common\models\usermembership\UserMembership;
+use common\models\usersubscription\UserSubscription;
 use common\models\usertalent\UserTalent;
 use common\models\useraddress\UserAddress;
+use common\models\userprofileimage\UserProfileImage;
 use shop\entities\Shop\Order\Order;
 use Yii;
 use yii\behaviors\TimestampBehavior;
@@ -37,10 +38,11 @@ use yii\db\ActiveRecord;
  * 
  * @property Network[] $networks
  * @property WishlistItem[] $wishlistItems
- * @property UserMembership $userMembership
+ * @property UserSubscription[] $userSubscription
  * @property UserTalent $userTalent
  * @property UserAddress[] $userAddress
  * @property Order[] $order
+ * @property UserProfileImage[] $userProfileImage 
  */
 class User extends ActiveRecord implements AggregateRoot
 {
@@ -186,9 +188,9 @@ class User extends ActiveRecord implements AggregateRoot
         return $this->hasMany(WishlistItem::class, ['user_id' => 'id']);
     }
 
-    public function getUserMembership()
+    public function getUserSubscription()
     {
-        return $this->hasOne(UserMembership::className(), ['user_id' => 'id']);
+        return $this->hasMany(UserSubscription::className(), ['user_id' => 'id']);
     }
 
     public function getUserTalent()
@@ -206,9 +208,15 @@ class User extends ActiveRecord implements AggregateRoot
         return $this->hasMany(Order::className(), ['user_id' => 'id']);
     }
 
+    public function getUserProfileImage()
+    {
+        return $this->hasMany(UserProfileImage::className(), ['user_id' => 'id']);
+    }
+
     public function canUpdateProfile()
     {
-        $isPlanTalent = $this->userMembership->membership->id == 1;
+//        $isPlanTalent = $this->userMembership->membership->id == 1;
+        $isPlanTalent = $this->userSubscription[0]->ref_id == 1;
         $isTalentSet = $this->userTalent == NULL;
 
         if($isPlanTalent && $isTalentSet)
@@ -216,6 +224,18 @@ class User extends ActiveRecord implements AggregateRoot
             return true;
         }
         return false;
+    }
+
+        public function getSubscription($type) {
+        $result = [];
+        if ($this->userSubscription) {
+            foreach ($this->userSubscription as $subscription) {
+                if ($subscription->type == $type) {
+                    $result[] = $subscription;
+                }
+            }
+        }
+        return $result;
     }
 
     public function hasAddress()
@@ -229,8 +249,8 @@ class User extends ActiveRecord implements AggregateRoot
 
     public function canShowTalent()
     {
-        $isPlanTalent = $this->userMembership->membership->id == 1;
-        
+//        $isPlanTalent = $this->userMembership->membership->id == 1;
+        $isPlanTalent = $this->userSubscription[0]->ref_id == 1;        
         if($isPlanTalent)
         {
             return true;

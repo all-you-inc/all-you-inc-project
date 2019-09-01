@@ -5,7 +5,7 @@ use yii\helpers\Url;
 use frontend\widgets\Shop\CartWidget;
 use shop\entities\Shop\Product\Product;
 use shop\entities\Shop\Category;
-
+use common\models\userprofileimage\UserProfileImage;
 //dd($active);
 ?> 
 
@@ -28,7 +28,26 @@ use shop\entities\Shop\Category;
 <aside class="sidebar col-lg-3">
     <div class="widget widget-dashboard">
         <div class="sidemenu-intro">
-            <img src="<?= Yii::getAlias('@web/images/spotlight/profile-1.jpg') ?>" alt="profile-image" class="sidemenu-profile-img"/>        
+            
+            <form id="bannerfileupload" action="<?= yii\helpers\Url::to(['user/uploadprofile']);?>" method="POST" enctype="multipart/form-data">    
+                
+                <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
+                
+                <div class="container-custom-upload">
+                    
+                    <a href="#" onclick="javascript:$('#bannerfileupload input').click();" class="show-on-custom-link" aria-label="Upload profile banner">
+                    <?php $image = UserProfileImage::getProfileImage() ?>
+                        <img src="<?= ($image == null) ? Yii::getAlias('@web/images/spotlight/profile-1.png') : $image ?>" alt="profile-image" class="sidemenu-profile-img"/>    
+                
+                        <span class="custom-icon-hide btn-custom-upload"><i class="fa fa-cloud-upload"></i></span>
+                
+                    </a>
+                
+                    <input type="file" name="PhotosForm[files]" id="files" style="display:none;">
+                
+                </div>
+                
+            </form>
             <span class="sidemenu-profile-name"><?= \Yii::$app->user->identity->getName() ?></span>
             <?php if(\Yii::$app->user->identity->getUser()->userTalent->industry->name != NULl) { ?>
                 <span class="sidemenu-profile-profession">Industry : <?= \Yii::$app->user->identity->getUser()->userTalent->industry->name ?></span>
@@ -54,3 +73,10 @@ use shop\entities\Shop\Category;
         </ul>
     </div><!-- End .widget -->
 </aside>
+
+<script>
+$('#files').change(function() {
+  // submit the form 
+      $('#bannerfileupload').submit();
+  });
+</script>

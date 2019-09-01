@@ -1,33 +1,31 @@
 <?php
 
-namespace  common\models\membership;
+namespace common\models\currency;
 
 use Yii;
+
 /**
- * This is the model class for table "membership".
+ * This is the model class for table "currency".
  *
  * @property integer $id
  * @property string $title
- * @property integer $level
- * @property string $price
- * @property string $status
- * @property string $description
- * @property string $category
  * @property string $created_at
  * @property string $created_by
  * @property string $modified_at
  * @property string $modified_by
  * @property integer $is_deleted
  *
+ * @property Addons[] $addons
+ * @property Payment[] $payments
  */
-class Membership extends \yii\db\ActiveRecord
+class Currency extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'membership';
+        return 'currency';
     }
 
     /**
@@ -36,10 +34,9 @@ class Membership extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['level', 'created_at', 'created_by', 'modified_at', 'modified_by', 'is_deleted'], 'integer'],
-            [['status', 'description', 'category'], 'string'],
-            [['title'], 'string', 'max' => 256],
-            [['price'], 'string', 'max' => 64],
+            [['title'], 'required'],
+            [['created_at', 'created_by', 'modified_at', 'modified_by', 'is_deleted'], 'integer'],
+            [['title'], 'string', 'max' => 11],
         ];
     }
 
@@ -51,16 +48,27 @@ class Membership extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'title' => 'Title',
-            'level' => 'Level',
-            'price' => 'Price',
-            'status' => 'Status',
-            'description' => 'description',
-            'category' => 'Category',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'modified_at' => 'Modified At',
             'modified_by' => 'Modified By',
             'is_deleted' => 'Is Deleted',
         ];
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getAddons()
+    {
+        return $this->hasMany(Addons::className(), ['currency_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getPayments()
+    {
+        return $this->hasMany(Payment::className(), ['currency_id' => 'id']);
     }
 }
