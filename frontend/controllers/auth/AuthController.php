@@ -10,6 +10,7 @@ use yii\web\User;
 use shop\forms\auth\LoginForm;
 use common\models\usersubscription\UserSubscription;
 use common\models\usertalent\UserTalent;
+use common\services\UserReferralService;
 
 class AuthController extends Controller {
 
@@ -29,13 +30,16 @@ class AuthController extends Controller {
         if (!Yii::$app->user->isGuest) {
             return $this->goHome();
         }
-
+//dd($_SESSION);
         $form = new LoginForm();
-        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
+        if ($form->load(Yii::$app->request->post())) {
+//        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
             try {
                 $user = $this->service->auth($form);
                 Yii::$app->user->login(new Identity($user), $form->rememberMe ? Yii::$app->params['user.rememberMeDuration'] : 0);
-                $this->actionTalentprofile($user);
+//                dd($_SESSION);
+                UserReferralService::checkAndCreateReferralFromSession();
+                $this->actionUsersubscription($user);
                 return $this->goBack();
             } catch (\DomainException $e) {
                 Yii::$app->errorHandler->logException($e);
@@ -49,8 +53,9 @@ class AuthController extends Controller {
     }
 
     private function actionTalentprofile($user) {
-//        dd($user->getSubscription('membership')[0]->ref_id);
-        if (isset($user->getSubscription('membership')[0]->ref_id) && $user->getSubscription('membership')[0]->ref_id == 1) { //for Talent type membership
+//        dd($user->canShowTalent());
+//        if (isset($user->getSubscription('membership')[0]->ref_id) || ($user->getSubscription('membership')[0]->ref_id == 1 || $user->getSubscription('membership')[0]->ref_id == 2)) { //for Talent type membership
+        if ($user->canShowBothTalent()) { //for Talent type membership
             $check = UserTalent::find()->where(['user_id' => $user->id])->one();
             if (!$check instanceof UserTalent) {
                 Yii::$app->session->setFlash('success', 'Successfully login, please update your talent profile.');
@@ -58,6 +63,15 @@ class AuthController extends Controller {
             } else {
                 Yii::$app->session->setFlash('success', 'Successfully login.');
             }
+        }
+    }
+
+    private function actionUsersubscription($user) {
+        if ($user->isUserSubscribed()) {
+            Yii::$app->session->setFlash('success', 'Successfully login.');
+        } else {
+            Yii::$app->session->setFlash('success', 'Successfully login, please select any membership plan');
+            Yii::$app->user->setReturnUrl(['plan']);
         }
     }
 

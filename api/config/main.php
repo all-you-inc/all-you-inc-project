@@ -54,6 +54,7 @@ return [
     ],
     'components' => [
         'request' => [
+            'enableCookieValidation' => false,
             'parsers' => [
                 'application/json' => 'yii\web\JsonParser',
             ],
@@ -97,6 +98,7 @@ return [
                 'GET shop/products/brand/<id:\d+>' => 'shop/product/brand',
                 'GET shop/products/tag/<id:\d+>' => 'shop/product/tag',
                 'GET shop/products' => 'shop/product/index',
+                'GET shop/products/user-collection' => 'shop/product/user-collection',
                 'shop/products/<id:\d+>/cart' => 'shop/cart/add',
                 'shop/products/<id:\d+>/wish' => 'shop/wishlist/add',
 
@@ -154,6 +156,14 @@ return [
                 'POST shop/product/activate/<id:\d+>' => 'shop/product/activate',
                 // Draft Product By Id
                 'POST shop/product/draft/<id:\d+>' => 'shop/product/draft',
+                // Get MemberShip Plans
+                'GET plans' => 'user/profile/plan',
+                // Get Addons
+                'GET addons' => 'user/profile/addons',
+                // Get User All Cards
+                'GET cards' => 'user/profile/get-cards',
+                // Subscribe Plan
+                'POST plan' => 'user/purchase/plan',
             ],
         ],
     ],
@@ -161,6 +171,7 @@ return [
         'class' => 'filsh\yii2\oauth2server\filters\auth\CompositeAuth',
         'except' => ['site/index', 'oauth2/rest/token','user/profile/signup',
                     'shop/product/index','shop/product/category','shop/product/related',
+                    'user/profile/plan','user/profile/addons',
                     'shop/category/index','shop/category/get-brands'],
         'authMethods' => [
             ['class' => 'yii\filters\auth\HttpBearerAuth'],
@@ -171,7 +182,9 @@ return [
         'class' => 'yii\filters\AccessControl',
         'except' => ['site/index', 'oauth2/rest/token','user/profile/signup' ,
                     'shop/product/index','shop/product/category','shop/product/related',
+                    'user/profile/plan','user/profile/addons',
                     'shop/category/index','shop/category/get-brands'
+                    
                     ],
         'rules' => [
             [

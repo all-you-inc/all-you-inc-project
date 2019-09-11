@@ -83,7 +83,6 @@ class OrderService
             foreach ($products as $product) {
                 $this->products->save($product);
             }
-            $this->cart->clear();
         });
 
         return $order;

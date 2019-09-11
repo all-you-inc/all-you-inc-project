@@ -109,6 +109,17 @@ class ProductController extends Controller
     }
 
 
+    public function actionUserCollection()
+    {
+        $keyword = Yii::$app->request->getQueryParam('keyword');
+        
+        $dataProvider = $this->products->getUserProducts(\Yii::$app->user->id,$keyword);
+        $product_array = [];
+        foreach($dataProvider->getModels() as $product){
+            array_push($product_array,DataHelper::serializeProduct($product));
+        }
+        return $this->dataHeader($product_array);
+    }
 
     
 
@@ -226,9 +237,7 @@ class ProductController extends Controller
     }
 
     public function actionCreate() {
-        $form = new ProductCreateForm();
-        // dd($_FILES);
-        // print_r(Yii::$app->request->post());die();
+        $form = new ProductCreateForm('api');
         if($form->load(Yii::$app->request->post()))
         {
             if ($form->validate()) 
@@ -414,7 +423,7 @@ class ProductController extends Controller
     {
         $product = $this->findModel($id);
 
-        $form = new ProductEditForm($product);
+        $form = new ProductEditForm($product,'api');
 
         if($form->load(Yii::$app->request->post()) ){
             if ($form->validate()) {
@@ -445,7 +454,6 @@ class ProductController extends Controller
                                 'ProductErrors'=> $form->errors,
                                 'MetaErrors' => $form->meta->errors,
                                 'CategoryErrors' => $form->categories->errors,
-                                'TagsErrors' => $form->tags->errors,
                         ],
                     ],
                 'message' => 'Invalid Data',

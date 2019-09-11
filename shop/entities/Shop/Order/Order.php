@@ -138,7 +138,7 @@ class Order extends ActiveRecord
         {
             if( $item->product->created_by == \Yii::$app->user->id )
             {
-                $SalesCost += $item->price;
+                $SalesCost += $item->price * $item->quantity;
             }
         }
         return $SalesCost;

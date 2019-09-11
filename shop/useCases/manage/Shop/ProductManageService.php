@@ -68,28 +68,35 @@ class ProductManageService
             $product->assignCategory($category->id);
         }
 
-        foreach ($form->values as $value) {
-            foreach($value->value as $val){
-                $product->setValue($value->id, $val);
+        if(isset($form->values))
+        {
+            foreach ($form->values as $value) {
+                foreach($value->value as $val){
+                    $product->setValue($value->id, $val);
+                }
             }
         }
-
         foreach ($form->photos->files as $file) {
             $product->addPhoto($file);
         }
 
-        foreach ($form->tags->existing as $tagId) {
-            $tag = $this->tags->get($tagId);
-            $product->assignTag($tag->id);
-        }
-
-        $this->transaction->wrap(function () use ($product, $form) {
-            foreach ($form->tags->newNames as $tagName) {
-                if (!$tag = $this->tags->findByName($tagName)) {
-                    $tag = Tag::create($tagName, $tagName);
-                    $this->tags->save($tag);
-                }
+        if(isset($form->tags))
+        {
+            foreach ($form->tags->existing as $tagId) {
+                $tag = $this->tags->get($tagId);
                 $product->assignTag($tag->id);
+            }
+        }
+        $this->transaction->wrap(function () use ($product, $form) {
+            if(isset($form->tags))
+            {
+                foreach ($form->tags->newNames as $tagName) {
+                    if (!$tag = $this->tags->findByName($tagName)) {
+                        $tag = Tag::create($tagName, $tagName);
+                        $this->tags->save($tag);
+                    }
+                    $product->assignTag($tag->id);
+                }
             }
             $this->products->save($product);
         });
@@ -129,22 +136,28 @@ class ProductManageService
                 $product->assignCategory($category->id);
             }
 
-            foreach ($form->values as $value) {
-                foreach($value->value as $val){
-                    $product->setValue($value->id, $val);
+            if(isset($form->values))
+            {
+                foreach ($form->values as $value) {
+                    foreach($value->value as $val){
+                        $product->setValue($value->id, $val);
+                    }
                 }
             }
 
-            foreach ($form->tags->existing as $tagId) {
-                $tag = $this->tags->get($tagId);
-                $product->assignTag($tag->id);
-            }
-            foreach ($form->tags->newNames as $tagName) {
-                if (!$tag = $this->tags->findByName($tagName)) {
-                    $tag = Tag::create($tagName, $tagName);
-                    $this->tags->save($tag);
+            if(isset($form->tags))
+            {
+                foreach ($form->tags->existing as $tagId) {
+                    $tag = $this->tags->get($tagId);
+                    $product->assignTag($tag->id);
                 }
-                $product->assignTag($tag->id);
+                foreach ($form->tags->newNames as $tagName) {
+                    if (!$tag = $this->tags->findByName($tagName)) {
+                        $tag = Tag::create($tagName, $tagName);
+                        $this->tags->save($tag);
+                    }
+                    $product->assignTag($tag->id);
+                }
             }
             $this->products->save($product);
         });

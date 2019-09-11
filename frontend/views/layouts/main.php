@@ -52,7 +52,12 @@ AppAsset::register($this);
         ?>
             });
         </script>
-<?= $this->render('shared/flashmessage') ?>
+        <script>
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
+        <?= $this->render('shared/flashmessage') ?>
         <a id="scroll-top" href="#top" title="Top" role="button"><i class="icon-angle-up"></i></a>
     </body>
 </html>

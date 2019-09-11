@@ -15,6 +15,7 @@ use shop\entities\Shop\Product\Product;
 use shop\entities\Shop\Category;
 use shop\entities\Shop\Brand;
 use yii\helpers\ArrayHelper;
+use common\services\UserReferralService;
 
 class CatalogController extends Controller {
 
@@ -133,9 +134,10 @@ class CatalogController extends Controller {
         if (!$product = $this->products->find($id)) {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
-
-        $this->layout = 'blank';
-
+        $this->layout = 'main';
+        if (isset($_GET['referral']) && $_GET['referral'] != NULL) {
+            UserReferralService::addReferralInSession($_GET['referral'],$id);
+        }
         $cartForm = new AddToCartForm($product);
         $reviewForm = new ReviewForm();
 

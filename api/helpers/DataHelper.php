@@ -1,12 +1,14 @@
 <?php
 
 namespace api\helpers;
+
+use common\models\membership\Membership;
 use shop\entities\Shop\Product\Modification;
 use shop\entities\Shop\Product\Photo;
 use shop\entities\Shop\Product\Product;
 use shop\cart\CartItem;
 use shop\cart\cost\Discount;
-
+use common\models\currency\Currency;
 use yii\data\DataProviderInterface;
 use yii\helpers\Url;
 
@@ -22,6 +24,7 @@ class DataHelper
 
                 'id' => $product->id,
                 'title' => $product->name,
+                'code' => $product->code,
                 "description" => $product->description,
                 "availableForSale" => false,
                 "productType" => $product->category->name,
@@ -183,4 +186,75 @@ class DataHelper
     }
     /*** */
 
+    public static function serializeMemberShips($subscriptions){
+        $memberships = [];
+
+        foreach($subscriptions as $subscription){
+            $memberships[] = [
+                        'subscription_id'=>$subscription->id,
+                        'membership'=>self::serializeMemberShipItem($subscription->ref_id),
+            ];
+        }
+
+        return $memberships;
+
+    }
+
+    public static function serializeMemberShipItem($id){
+        $model = Membership::find()->where("id = :id",['id'=>$id])->one();
+        
+        if($model!=null && $model instanceof Membership) {
+            return ['id'=>$model->id,'title'=>$model->title,'price'=>$model->price];
+        }
+        return [];
+
+    }
+
+    public static function serializeMemberShipPlan($plan){
+        return [
+            "id" => $plan->id,
+            "title" => $plan->title,
+            "sort" => $plan->sort,
+            "price" => $plan->price,
+            "currency" => static::serializeCurrency($plan->currency),
+            "status" => $plan->status,
+            "description" => $plan->description,
+            "category" => $plan->category,
+            "items" => static::serializeMSItems($plan->msItems),
+        ];
+    }
+
+    public static function serializeMSItems($msItems){
+        $msItemsArr = [];
+        $i = 0;
+        foreach($msItems as $msItem){
+            $msItemsArr[$i] = [
+                'id' => $msItem->id,
+                'unit' => $msItem->unit,
+                'type' => $msItem->type,
+                'itemType' => static::serializeMSItemType($msItem->itemType),
+                'price' => $msItem->price,
+                'currency' => static::serializeCurrency($msItem->currency),
+                'groupId' => $msItem->group_id,
+            ];
+            $i++;
+        }
+        return $msItemsArr;
+    }
+
+    
+    public static function serializeCurrency($currency){
+        return [
+            'id' => $currency->id,
+            'title' => $currency->title,
+        ];
+    }
+
+    public static function serializeMSItemType($type){
+        return [
+            'id' => $type->id,
+            'title' => $type->title,
+            'key' => $type->key
+        ];
+    }
 }

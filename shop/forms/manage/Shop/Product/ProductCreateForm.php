@@ -25,18 +25,17 @@ class ProductCreateForm extends CompositeForm
     public $name;
     public $description;
     public $weight;
+    
+    private $setupModel;
 
-    public function __construct($config = [])
+    const API_SETUP = 'api';
+    const FRONTEND_SETUP = 'frontend';
+    const BACKEND_SETUP = 'backend';
+
+    public function __construct($setupModel = null,$config = [])
     {
-        $this->price = new PriceForm();
-        $this->quantity = new QuantityForm();
-        $this->meta = new MetaForm();
-        $this->categories = new CategoriesForm();
-        $this->photos = new PhotosForm();
-        $this->tags = new TagsForm();
-        $this->values = array_map(function (Characteristic $characteristic) {
-            return new ValueForm($characteristic);
-        }, Characteristic::find()->orderBy('sort')->all());
+        $this->setSetupModel($setupModel);
+        $this->initializeModel();
         parent::__construct($config);
     }
 
@@ -60,6 +59,53 @@ class ProductCreateForm extends CompositeForm
 
     protected function internalForms(): array
     {
+        if($this->setupModel == self::API_SETUP){
+            return ['price', 'quantity', 'meta', 'photos', 'categories'];
+        }
         return ['price', 'quantity', 'meta', 'photos', 'categories', 'tags', 'values'];
+    }
+
+    public function setSetupModel($setup)
+    {
+        switch($setup)
+        {
+            case 'api':
+            {
+                $this->setupModel = self::API_SETUP;
+                break;
+            }
+            case 'frontend':
+            {
+                $this->setupModel = self::FRONTEND_SETUP;
+                break;
+            }
+            default :
+            {
+                $this->setupModel = self::BACKEND_SETUP;
+                break;
+            }
+        }
+    }
+
+    public function initializeModel()
+    {
+        $this->price = new PriceForm();
+        $this->quantity = new QuantityForm();
+        $this->meta = new MetaForm();
+        $this->categories = new CategoriesForm();
+        $this->photos = new PhotosForm();
+
+        if($this->setupModel != self::API_SETUP)
+        {
+            $this->tags = new TagsForm();
+        }
+
+        if($this->setupModel != self::API_SETUP)
+        {
+            $this->values = array_map(function (Characteristic $characteristic) {
+                return new ValueForm($characteristic);
+            }, Characteristic::find()->orderBy('sort')->all());
+        }
+            
     }
 }

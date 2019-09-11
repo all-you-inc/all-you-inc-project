@@ -3,6 +3,8 @@
 namespace frontend\controllers\shop;
 
 use Yii;
+use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\web\Controller;
 use shop\entities\Shop\Product\Product;
 use backend\forms\Shop\ProductSearch;
@@ -17,6 +19,7 @@ use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use shop\entities\Shop\Product\Value;
+use common\services\UserAccessService;
 
 class ProductController extends Controller {
 
@@ -57,19 +60,31 @@ class ProductController extends Controller {
     }
 
     public function actionCreate() {
-        $form = new ProductCreateForm();
-        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
-            try {
-                $product = $this->service->create($form);
-                return $this->redirect(['view', 'id' => $product->id]);
-            } catch (\DomainException $e) {
-                Yii::$app->errorHandler->logException($e);
-                Yii::$app->session->setFlash('error', $e->getMessage());
+    $access = UserAccessService::checkByKey(\Yii::$app->user->identity->getUser(), 'PRODUCTS');
+        if ($access) {
+            $limit = UserAccessService::checkLimitByMsItem(\Yii::$app->user->identity->getUser(), $access, 'PRODUCTS');
+            if ($limit) {
+                $form = new ProductCreateForm();
+                if ($form->load(Yii::$app->request->post()) && $form->validate()) {
+                    try {
+                        $product = $this->service->create($form);
+                        return $this->redirect(['view', 'id' => $product->id]);
+                    } catch (\DomainException $e) {
+                        Yii::$app->errorHandler->logException($e);
+                        Yii::$app->session->setFlash('error', $e->getMessage());
+                    }
+                }
+                return $this->render('create', [
+                            'model' => $form,
+                ]);
+            } else {
+                Yii::$app->session->setFlash('error', 'Limit end in your current plan, Please subscribe Addons for more.');
+                return $this->redirect(['/products']);
             }
+        } else {
+            Yii::$app->session->setFlash('error', 'Access denied in your current plan, Please update your membership plan.<br><a href="' . Html::encode(Url::to(['/subscription'])) . '">Click Here</a>');
+            return $this->redirect(['/products']);
         }
-        return $this->render('create', [
-                    'model' => $form,
-        ]);
     }
 
 

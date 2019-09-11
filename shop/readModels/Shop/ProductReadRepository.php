@@ -44,6 +44,14 @@ class ProductReadRepository
         return Product::find()->alias('p')->active('p')->with('mainPhoto', 'brand')->each();
     }
 
+
+    public function getUserProducts($userId,$keyword = ''): DataProviderInterface
+    {
+        $query = Product::find()->alias('p')->active('p')->with('mainPhoto')->where('created_by = :user',['user'=>$userId]);
+        return $this->getProvider($query);
+    }
+
+
     public function getAll($keyword = ''): DataProviderInterface
     {
         $query = Product::find()->alias('p')->active('p')->with('mainPhoto');

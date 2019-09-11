@@ -65,10 +65,9 @@ class SignupService
         $form->email = $getPostData['SignupForm']['email'];
         $form->name = $getPostData['SignupForm']['name'];
         $form->password = $getPostData['SignupForm']['password'];
-        $form->rePassword = $getPostData['SignupForm']['rePassword'];
-        if($scenario == null || $scenario == 'frontend')
-        {
-            $form->reCaptcha = $getPostData['SignupForm']['reCaptcha'];
+        if($form->scenario == 'frontend') {
+//            $form->rePassword = $getPostData['SignupForm']['rePassword'];
+//            $form->reCaptcha = $getPostData['SignupForm']['reCaptcha'];
         }
         return $form;
     }

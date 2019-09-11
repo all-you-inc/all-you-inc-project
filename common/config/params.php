@@ -14,5 +14,20 @@ return [
     'reCaptcha' => [
         'secret-key' => '6LdugLQUAAAAAFZYesN7Q-B-dJuWgh-2XOWN6uo2',
         'site-key' => '6LdugLQUAAAAAP9k-TGv9cjv0P7BEUvLbkczOpd3'
-    ]
+    ],
+    'squarePaymentGateWay' =>[
+        'application-id' => '< APPLICATION-ID >',
+        'location-id' => '< LOCATION-ID >',
+        'access-token' => '< ACCESS-TOKEN >',
+        'host' => 'https://connect.squareup.com',
+        'paymentform' => 'https://js.squareup.com/v2/paymentform',
+
+        'sandBox-application-id' => 'sandbox-sq0idb-apT3BZxK1FV_vp438rah2A',
+        'sandBox-location-id' => 'KWBMPZCRK0EXM',
+        'sandBox-access-token' => 'EAAAEGTRSlZDiCtHB9-fPIlyi6uzC2blwHeIkrgSXrwmKlaF8WqmhRHciHPGwO-o',
+        'sandBox-host' => 'https://connect.squareupsandbox.com',
+        'sandBox-paymentform' => 'https://js.squareupsandbox.com/v2/paymentform',
+
+        'secret-token' => '< SECRET-TOKEN >',
+    ],
 ];

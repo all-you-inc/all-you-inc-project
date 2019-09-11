@@ -32,7 +32,9 @@ MagnificPopupAsset::register($this);
 <nav aria-label="breadcrumb" class="breadcrumb-nav">
     <div class="container-fluid">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="<?= \yii\helpers\Url::home() ?>"><i class="icon-home"></i></a></li>
+            <li class="breadcrumb-item"><a href="<?= \yii\helpers\Url::home() ?>">
+                    <!--<i class="icon-home"></i>-->
+                    Home</a></li>
             <li class="breadcrumb-item active" aria-current="page"><?= Html::encode($this->title) ?></li>
         </ol>
     </div><!-- End .container-fluid -->
@@ -91,6 +93,16 @@ MagnificPopupAsset::register($this);
                                 <a href="<?= Url::to(['/shop/cart/add', 'id' => $product->id]) ?>" class="paction add-cart" title="Add to Cart">
                                     <span>Add to Cart</span>
                                 </a>
+                                <?php
+                                if (!\Yii::$app->user->isGuest && \Yii::$app->user->identity->getUser()->isPromoter()) {
+                                    $shareUrl = Url::base('http') . Url::to(['/catalog/'.$product->id.'?referral='. \Yii::$app->user->identity->getUser()->referral_code]);
+                                    ?>
+                                    <a onclick="prompt('To Promote Press Ctrl + C, then Enter to copy to clipboard', '<?php echo $shareUrl ?>')"
+                                       class="paction product-promote-btn" title="Promote">
+                                        Promote
+                                    </a>
+                                        <!--<button class="float-right paction btn-primary" onclick="prompt('To Promote Press Ctrl + C, then Enter to copy to clipboard', '<?php echo $shareUrl ?>')">Promote</button>-->
+                                <?php } ?>    
                             </div><!-- End .product-action -->
                         </div><!-- End .product-single-details -->
                     </div><!-- End .col-lg-5 -->

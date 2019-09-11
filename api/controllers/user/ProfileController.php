@@ -2,33 +2,39 @@
 
 namespace api\controllers\user;
 
-use api\helpers\DateHelper;
-use shop\entities\User\User;
-use common\services\IndustryService;
-use common\services\IndustryDefinition;
-use common\services\TalentMasterService;
-use common\services\TalentMasterDefinition;
-use common\services\DjGenreService;
-use common\services\DjGenreDefinition;
-use common\services\MusicGenreService;
-use common\services\MusicGenreDefinition;
-use common\services\InstrumentService;
-use common\services\InstrumentDefinition;
-use common\services\InstrumentSpecificationService;
-use common\services\InstrumentSpecificationDefinition;
-use common\models\useraddress\UserAddress;
-use common\services\UserAddressService;
-use common\models\usertalent\UserTalent;
-use shop\helpers\UserHelper;
+use Yii;
 use yii\helpers\Url;
 use yii\rest\Controller;
-use shop\useCases\auth\SignupService;
-use shop\forms\auth\SignupForm;
-use shop\repositories\UserRepository;
+use api\helpers\DataHelper;
+use api\helpers\DateHelper;
+use shop\entities\User\User;
+use shop\helpers\UserHelper;
 use shop\services\RoleManager;
-use shop\services\TransactionManager;
+use shop\forms\auth\SignupForm;
+use common\services\DjGenreService;
+use common\services\IndustryService;
+use common\models\membership\MsItems;
 use shop\dispatchers\EventDispatcher;
-use Yii;
+use shop\repositories\UserRepository;
+use shop\services\TransactionManager;
+use shop\useCases\auth\SignupService;
+use common\services\DjGenreDefinition;
+use common\services\InstrumentService;
+use common\services\MusicGenreService;
+use common\services\IndustryDefinition;
+use common\services\UserAddressService;
+use common\models\membership\Membership;
+use common\models\usertalent\UserTalent;
+use common\services\TalentMasterService;
+use common\services\InstrumentDefinition;
+use common\services\MusicGenreDefinition;
+use common\services\SquarePaymentService;
+use common\models\useraddress\UserAddress;
+use common\services\TalentMasterDefinition;
+use common\models\usersquareinfo\UsersSquareInfo;
+use common\services\InstrumentSpecificationService;
+use common\models\usersubscription\UserSubscription;
+use common\services\InstrumentSpecificationDefinition;
 
 class ProfileController extends Controller
 {
@@ -393,13 +399,187 @@ class ProfileController extends Controller
         ];
     }
 
+    public function actionPlan(){
+        $plansArr = [];
+        $plans = Membership::find()->where(['status' => 'active', 'is_deleted' => 0])
+                ->orderBy('sort ASC')
+                ->all();
+        $i=0;
+        foreach($plans as $plan){
+           $plansArr[$i] = DataHelper::serializeMemberShipPlan($plan);
+           $i++;
+        }
+        if($plansArr != null) {
+            return [ 
+                'status' => '200',
+                'data'=>[
+                    'plans'=> $plansArr,
+                    ],
+                'message' => 'Data Found',
+            ];
+        }
+        return [ 
+            'status' => '400',
+            'data'=>[
+                'plans'=> $plansArr,
+                ],
+            'message' => 'Data Not Found',
+        ]; 
+    }
+
+    public function actionAddons() {
+
+        $userSubscription = UserSubscription::find()->where(['user_id' => \Yii::$app->user->id, 'type' => 'membership', 'status' => 'active'])->one();
+        $addonsArr = [];
+        if($userSubscription != null) { 
+
+            if($userSubscription->ref_id == 6){
+                $plans = Membership::find()->where(['status' => 'active', 'is_deleted' => 0, 'id' => '1'])
+                    ->orderBy('sort ASC')
+                    ->one();
+
+                $addonsArr[0] =  DataHelper::serializeMemberShipPlan($plans);
+                return [
+                    'status' => '200',
+                    'data'=>[
+                        'upgrade_membership' =>  $addonsArr[0],
+                    ],
+                    'message' => 'Upgrade membership founds',
+                ];
+            }      
+
+            if($userSubscription->ref_id == 7){
+                $plans = Membership::find()->where(['status' => 'active', 'is_deleted' => 0, 'id' => '2'])
+                    ->orderBy('sort ASC')
+                    ->one();
+
+                $addonsArr[0] =  DataHelper::serializeMemberShipPlan($plans);
+                return [
+                    'status' => '200',
+                    'data'=>[
+                        'upgrade_membership' =>  $addonsArr[0],
+                    ],
+                    'message' => 'Upgrade membership founds',
+                ];
+            }
+
+            if($userSubscription->ref_id == 1 || $userSubscription->ref_id == 2 || $userSubscription->ref_id == 3) {
+                $items = MsItems::find()->where(['membership_id' => $userSubscription->ref_id, 'type' => 'addons'])->all();
+                $addonsArr = DataHelper::serializeMSItems($items);
+                return [
+                    'status' => '200',
+                    'data'=>[
+                        'addons' => $addonsArr,
+                        ],
+                    'message' => 'Addons founds',
+                ];
+            }
+            if($userSubscription->ref_id == 4){
+                return [ 
+                    'status' => '400',
+                    'data'=>[
+                        'addons'=> $addonsArr,
+                        ],
+                    'message' => 'Fan has no subscription',
+                ];
+            }
+            if($userSubscription->ref_id == 5){
+                return [ 
+                    'status' => '400',
+                    'data'=>[
+                        'addons'=> $addonsArr,
+                        ],
+                    'message' => 'Custumer has no subscription',
+                ];
+            }
+        }
+        return [ 
+            'status' => '400',
+            'data'=>[
+                'addons'=> $addonsArr,
+                ],
+            'message' => 'User Not Subscribe Any MemberShip',
+        ]; 
+    }
+
+    public function actionGetCards() {
+        $cards = UsersSquareInfo::find()->where(['user_id' => \Yii::$app->user->id])->all();
+        if($cards != null)
+        {
+            if(\Yii::$app->user->identity->getUser()->square_cust_id != null){
+                $square = new SquarePaymentService;
+                $result = $square->retrieveCustomer(\Yii::$app->user->identity->getUser()->square_cust_id);
+                if(!is_object($result))
+                {
+                    return [
+                        'code' => 400,
+                        'message' => $result,
+                        ];
+                }
+                $errors = $result->getErrors();
+
+                if($errors != null){
+                    $errorArr = [];
+                    $i=0;
+                    foreach($errors as $error)
+                    {
+                        $errorArr[$i] = $error->getDetails();
+                        $i++;
+                    }  
+                    return [
+                        'code' => 400,
+                        'message' => $errorArr,
+                    ];
+                }
+                $customer = $result->getCustomer();
+                $cards = $customer->getCards();
+                $cardsArr = [];
+                $customerArr = [
+                    'id' => $customer->getId(),
+                    'name' => $customer->getGivenName(),
+                    'email' => $customer->getEmailAddress(),
+                    'refId' => $customer->getReferenceId(),
+                    
+                ];
+                $i=0;
+                foreach($cards as $card){
+                    $cardsArr[$i] = [
+                        'sourceId' => $card->getId(),
+                        'cardBrand' => $card->getCardBrand(),
+                        'last4Digit' => $card->getLast4(),
+                        'expMonth' => $card->getExpMonth(),
+                        'expYear' => $card->getExpYear(),
+                    ];
+                    $i++;
+                }
+
+                return [
+                        'code' => 200,
+                        'message' => 'Card Found',
+                        'data' => [
+                            'customerDetail' => $customerArr,
+                            'customerCards' => $cardsArr
+                        ],
+                    ];
+            }
+            return [
+                'code' => 400,
+                'message' => 'Square Id Not Found',
+                ];
+        }
+        return [
+            'code' => 400,
+            'message' => 'No Card Found',
+        ];
+    }
+
     public function actionSignup(){ 
         
 
         $form = new SignupForm;
-        $form->scenario = 'api';
+
         if(Yii::$app->request->post()){
-            $form = $this->service->setForm(Yii::$app->request->post(),$form->scenario);
+            $form = $this->service->setForm(Yii::$app->request->post(), 'api');
             if ($form->validate()) {
                 try {
                     $this->service->signup($form);
@@ -458,15 +638,21 @@ class ProfileController extends Controller
         return null;
     }
 
+    
+
     private function serializeUser(User $user): array
     {
         
         $addresses = $this->actionGetAddress($user->id);
         $defaultAddress = $this->getDefaultAddress($addresses);
+        $subscriptions = $user->getSubscription('membership');
+        
         return [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'phone' => $user->phone,
+            'country' => $user->country,
             'date' => [
                 'created' => DateHelper::formatApi($user->created_at),
                 'updated' => DateHelper::formatApi($user->updated_at),
@@ -475,16 +661,7 @@ class ProfileController extends Controller
                 'code' => $user->status,
                 'name' => UserHelper::statusName($user->status),
             ],
-            'membership' => [
-                "id"=> $user->userSubscription('membership')[0]->id,
-//                "id" => $user->userMembership->id,
-                "plan" => [
-//                  'id' => $user->userMembership->membership->id,
-                  'id' => $user->userSubscription('membership')[0]->ref_id,
-                  'title' => 'ALL TALENT',  
-//                  'title' => $user->userMembership->membership->title,  
-                ],
-            ],
+            'membership' =>  DataHelper::serializeMemberShips($subscriptions),
             'addresses'=> $addresses,
             'defaultAddress' => $defaultAddress,
             'talent' => [

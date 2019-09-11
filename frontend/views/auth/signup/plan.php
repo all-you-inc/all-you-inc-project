@@ -5,10 +5,10 @@
 
 use yii\helpers\Html;
 use kartik\form\ActiveForm;
+use common\models\membership\Membership;
 
 $this->title = 'Membership Plan';
 $this->params['breadcrumbs'][] = $this->title;
-
 ?>
 <main class="main">
     <nav aria-label="breadcrumb" class="breadcrumb-nav">
@@ -20,17 +20,34 @@ $this->params['breadcrumbs'][] = $this->title;
         </div><!-- End .container-fluid -->
     </nav>
     <div class="container">
+        <ul class="checkout-progress-bar">
+            <li class="active">
+                <span>Plan Select</span>
+            </li>
+            <li>
+                <span>Review &amp; Payments</span>
+            </li>
+        </ul>
+    </div>
+                <?= Html::beginForm() ?>
+    <div class="container">
         <div class="center col-md-12">
             <div class="heading">
-                <h2 class="title"><?= $this->title ?></h2>
+                <h2 class="display-contents" class="title"><?= $this->title ?></h2>
+                <span class="float-right">
+                    <?= Html::submitButton('As Fan', ['class' => 'btn btn-primary', 'name' => 'plan_id', 'value' => Membership::FanId]) ?>
+                    <?= Html::submitButton('As Customer', ['class' => 'btn btn-primary', 'name' => 'plan_id', 'value' => Membership::CustomerId]) ?>
+                </span>
             </div>
-            <?= Html::beginForm() ?>
+
             <div class="plan-main">
                 <div class="container">
                     <div class="row">
                         <?php
                         foreach ($plans as $key => $plan) {
+//                            dd($plan);
                             $price = explode('.', $plan->price);
+                            $items = common\models\membership\MsItems::find()->where(['membership_id' => $plan->id, 'type' => 'basic'])->all();
                             ?>
                             <div class="col-md-4 col-sm-6">
                                 <div class="pricingTable <?= $color[$key]['class'] ?>">
@@ -41,16 +58,35 @@ $this->params['breadcrumbs'][] = $this->title;
                                           s27.202-37.185,46.917-8.488c19.715,28.693,38.687,13.116,46.502,4.832c7.817-8.282,27.386-15.906,41.405,6.294V0H0.48
                                           L0.732,193.75z"></path>
                                     </g>
-                                    <text transform="matrix(1 0 0 1 69.7256 116.2686)" fill="#fff" font-size="70.0000">$<?= $price[0] ?></text>
+                                    <text transform="matrix(1 0 0 1 110 116.2686)" fill="#fff" font-size="70.0000">$<?= $price[0] ?></text>
                                     <text transform="matrix(0.9566 0 0 1 197.3096 83.9121)" fill="#fff" font-size="29.0829">.<?= $price[1] ?></text>
                                     <text transform="matrix(1 0 0 1 233.9629 115.5303)" fill="#fff" font-size="15.4128">/<?= $plan->category ?></text>
                                     </svg>
                                     <div class="pricing-content">
                                         <h3 class="title"><?= $plan->title ?></h3>
                                         <ul class="pricing-content">
-                                            <?= $plan->description ?>
+                                            <?php
+                                            if ($items) {
+                                                foreach ($items as $item) {
+                                                    ?>
+                                                    <li><?= $item->unit != 0 ? $item->unit . ' ' : '' ?> <?= $item->itemType->title ?></li>
+                                                    <?php
+                                                }
+                                            }
+                                            ?>
                                         </ul>
                                         <?= Html::submitButton('Subscribe Now', ['class' => 'btn pricingTable-signup', 'name' => 'plan_id', 'value' => $plan->id]) ?>
+                                        <?php
+                                        if ($plan->id != Membership::Promoter) {
+//                                            dd('here');
+                                            $value = $plan->id == Membership::Talent ? Membership::FreeTalent : Membership::FreeTalentWithProduct;
+//                                            dd($value);
+                                            echo '<br><br>' .
+                                                    Html::submitButton('Free Trial', ['class' => 'btn pricingTable-signup', 'name' => 'plan_id', 'value' => $value])
+                                                    . '<p>Free Trial Subscription for 60 days.</p>';
+                                        }
+                                        ?>
+
                                     </div>
                                 </div>
                             </div>

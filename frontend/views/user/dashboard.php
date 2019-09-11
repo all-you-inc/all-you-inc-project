@@ -5,6 +5,7 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
+use shop\helpers\PriceHelper;
 use kartik\form\ActiveForm;
 use common\models\usertalent\UserTalent;
 use common\models\djgenre\DjGenre;
@@ -74,7 +75,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <span><i class="fa fa-dollar dashboard-icon"></i></span>
                                     <div class="info-box-content">
                                         <span class="info-box-text">Total Sales</span>
-                                        <span class="info-box-number"><?= \Yii::$app->user->identity->getUser()->getTotalSalesAmount() ?></span>
+                                        <span class="info-box-number"><?= PriceHelper::format(\Yii::$app->user->identity->getUser()->getTotalSalesAmount()) ?></span>
                                     </div>
                                 </div>
                             </div>
@@ -83,7 +84,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <span><i class="fa fa-users dashboard-icon"></i></span>
                                     <div class="info-box-content">
                                         <span class="info-box-text">Total Fans</span>
-                                        <span class="info-box-number">1,410</span>
+                                        <span class="info-box-number">0</span>
                                     </div>
                                 </div>
                             </div>

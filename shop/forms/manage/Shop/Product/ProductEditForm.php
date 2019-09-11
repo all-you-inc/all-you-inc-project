@@ -24,21 +24,16 @@ class ProductEditForm extends CompositeForm
     public $weight;
 
     private $_product;
+    private $setupModel;
 
-    public function __construct(Product $product, $config = [])
+    const API_SETUP = 'api';
+    const FRONTEND_SETUP = 'frontend';
+    const BACKEND_SETUP = 'backend';
+
+    public function __construct(Product $product, $setupModel = null, $config = [])
     {
-        $this->brandId = $product->brand_id;
-        $this->code = $product->code;
-        $this->name = $product->name;
-        $this->description = $product->description;
-        $this->weight = $product->weight;
-        $this->meta = new MetaForm($product->meta);
-        $this->categories = new CategoriesForm($product);
-        $this->tags = new TagsForm($product);
-        $this->values = array_map(function (Characteristic $characteristic) use ($product) {
-            return new ValueForm($characteristic, $product->getValue($characteristic->id));
-        }, Characteristic::find()->orderBy('sort')->all());
-        $this->_product = $product;
+        $this->setSetupModel($setupModel);
+        $this->initializeModel($product);
         parent::__construct($config);
     }
 
@@ -61,6 +56,54 @@ class ProductEditForm extends CompositeForm
 
     protected function internalForms(): array
     {
+        if($this->setupModel == self::API_SETUP)
+        {
+            return ['meta', 'categories'];
+        }
         return ['meta', 'categories', 'tags', 'values'];
+    }
+
+    public function setSetupModel($setup)
+    {
+        switch($setup)
+        {
+            case 'api':
+            {
+                $this->setupModel = self::API_SETUP;
+                break;
+            }
+            case 'frontend':
+            {
+                $this->setupModel = self::FRONTEND_SETUP;
+                break;
+            }
+            default :
+            {
+                $this->setupModel = self::BACKEND_SETUP;
+                break;
+            }
+        }
+    }
+
+    public function initializeModel($product)
+    {
+        $this->brandId = $product->brand_id;
+        $this->code = $product->code;
+        $this->name = $product->name;
+        $this->description = $product->description;
+        $this->weight = $product->weight;
+        $this->meta = new MetaForm($product->meta);
+        $this->categories = new CategoriesForm($product);
+       if($this->setupModel != self::API_SETUP)
+        {
+            $this->tags = new TagsForm($product);
+        }
+        if($this->setupModel != self::API_SETUP)
+        {
+            $this->values = array_map(function (Characteristic $characteristic) use ($product) {
+                return new ValueForm($characteristic, $product->getValue($characteristic->id));
+            }, Characteristic::find()->orderBy('sort')->all());
+        }
+        $this->_product = $product;   
     }
 }

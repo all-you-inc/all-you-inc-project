@@ -21,8 +21,9 @@ return [
             'ruleTable' => '{{%auth_rules}}',
         ],
         'queue' => [
-            'class' => 'yii\queue\redis\Queue',
+            'class' => 'yii\queue\file\Queue',
             'as log' => 'yii\queue\LogBehavior',
+            'path' => '@runtime/queue'
         ],
     ],
-];
+];  
