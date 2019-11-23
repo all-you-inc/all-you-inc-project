@@ -4,7 +4,7 @@
 /* @var $model \shop\forms\auth\SignupForm */
 
 use yii\helpers\Html;
-use kartik\form\ActiveForm;
+//use kartik\form\ActiveForm;
 ?>
 <?= Html::beginForm() ?>
 <div class="form-group required-field">
@@ -18,6 +18,10 @@ use kartik\form\ActiveForm;
 <div class="form-group required-field">
     <label>Phone Number </label>
     <input type="text" name="phone_number" class="form-control" value="<?= isset($model->phone_number) ? $model->phone_number : '' ?>" required>
+</div>
+<div class="form-group required-field">
+    <label>Address </label>
+    <input type="text" name="address" class="form-control" value="<?= isset($model->address) ? $model->address : '' ?>" required>
 </div>
 <div class="form-group required-field">
     <label>Country </label>
@@ -35,7 +39,7 @@ use kartik\form\ActiveForm;
             ?>
         </select>
     </div>
-</div>
+</div> 
 <div class="form-group required-field">
     <label>State </label>
     <input type="text" name="state" class="form-control" value="<?= isset($model->state) ? $model->state : '' ?>" required>
@@ -51,10 +55,6 @@ use kartik\form\ActiveForm;
 <div class="form-group required-field">
     <label>Postal Code </label>
     <input type="text" name="postal_code" class="form-control" value="<?= isset($model->postal_code) ? $model->postal_code : '' ?>" required>
-</div>
-<div class="form-group required-field">
-    <label>Address </label>
-    <input type="text" name="address" class="form-control" value="<?= isset($model->address) ? $model->address : '' ?>" required>
 </div>
 <div class="form-group">
     <label><input type="checkbox" value="1"  <?php if ($model->default == 1) echo 'checked'; ?> name="default"> Make it Default Address</label>

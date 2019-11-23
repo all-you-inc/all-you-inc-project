@@ -4,3 +4,10 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 # Otherwise forward it to index.php
 RewriteRule . index.php
+
+AddType video/ogg .ogg
+AddType video/mp4 .mp4
+AddType video/webm .webm
+AddType video/flv .flv
+AddType video/ogg .ogv
+AddType video/mov .mov

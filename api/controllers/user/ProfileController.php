@@ -3,20 +3,13 @@
 namespace api\controllers\user;
 
 use Yii;
-use yii\helpers\Url;
 use yii\rest\Controller;
 use api\helpers\DataHelper;
-use api\helpers\DateHelper;
 use shop\entities\User\User;
-use shop\helpers\UserHelper;
-use shop\services\RoleManager;
 use shop\forms\auth\SignupForm;
 use common\services\DjGenreService;
 use common\services\IndustryService;
 use common\models\membership\MsItems;
-use shop\dispatchers\EventDispatcher;
-use shop\repositories\UserRepository;
-use shop\services\TransactionManager;
 use shop\useCases\auth\SignupService;
 use common\services\DjGenreDefinition;
 use common\services\InstrumentService;
@@ -35,6 +28,12 @@ use common\models\usersquareinfo\UsersSquareInfo;
 use common\services\InstrumentSpecificationService;
 use common\models\usersubscription\UserSubscription;
 use common\services\InstrumentSpecificationDefinition;
+use common\services\UserMlmService;
+use common\models\userprofileimage\UserProfileImage;
+use shop\forms\manage\Shop\Product\PhotosForm;
+use yii\helpers\BaseFileHelper;
+use yii\data\Pagination;
+use common\services\GalleryService;
 
 class ProfileController extends Controller
 {
@@ -62,7 +61,7 @@ class ProfileController extends Controller
      */
     public function actionIndex()
     {
-        return $this->serializeUser($this->findModel());
+        return DataHelper::serializeUser($this->findModel());
     }
 
 
@@ -80,6 +79,31 @@ class ProfileController extends Controller
         return ['industry' => $industryDefination];
     }
 
+    public function actionGetMyTeam(){
+        $user = Yii::$app->user;
+        $referrals = UserMlmService::getUserReferralByReferralId($user->id);
+        $teamCount = count($referrals);
+        $tree = [];
+        
+        if ($teamCount == 0) {
+            return [
+                'status' => 404,
+                'message' => 'User referrals not found.'
+            ];
+        }
+        
+        foreach ($referrals as $referral) {
+            $tree[$referral->referralCodeUser->id == $user->id ? 'root' : $referral->referralCodeUser->id][$referral->user->id] = DataHelper::serializeUserShort($referral->user);
+        }
+        
+        return [
+            'status' => 200,
+            'data' => [
+                'team_count' => $teamCount,
+                'tree' => $tree
+            ]
+        ];
+    }
 
     /*
      * path="/user/profile/talent"
@@ -89,12 +113,12 @@ class ProfileController extends Controller
 
     public function actionTalent($id){
         $talent_master_array = TalentMasterService::getTalentMasterRecordByIndustryId($id);
-        $talentMasterDefination = array();
+        $talentMasterDefinition = array();
         for($i=0;$i<count($talent_master_array);$i++){
             $talent = $talent_master_array[$i]->talentMaster;
-            $talentMasterDefination[$i] = TalentMasterDefinition::setDefination($talent);
+            $talentMasterDefinition[$i] = TalentMasterDefinition::setDefination($talent);
         }
-        return ['talent' => $talentMasterDefination];
+        return ['talent' => $talentMasterDefinition];
     }
 
 
@@ -165,7 +189,7 @@ class ProfileController extends Controller
     public function verbs(): array
     {
         return [
-            'index' => ['get'],
+            // 'index' => ['*'],
             'industry' => ['get'],
             'talent' => ['get'],
             'djgenre' => ['get'],
@@ -174,6 +198,26 @@ class ProfileController extends Controller
             'instrumentspecification' => ['get'],
             'signup' => ['post'],
             'profile' => ['post','put'],
+        ];
+    }
+
+    public function actionGetUserSubscribedItems()
+    {
+        $user = \Yii::$app->user->identity->getUser();
+        $items = $user->getSubscribedItems();
+        if($items != NULL){
+            return [
+                'status' => '200',
+                'data' => [
+                    'items' => DataHelper::serializeMSItems($items),
+                ],
+                'message' => 'Get all subscribed items Successfully',
+            ];
+        }
+        return [
+            'status' => '400',
+            'data' => [],
+            'message' => 'User Not Subscribe Any MemberShip'
         ];
     }
 
@@ -191,6 +235,113 @@ class ProfileController extends Controller
         return $CountriesArr;
     }
 
+    public function actionUploadGallery()
+    {
+        $model = new PhotosForm;
+        if (\Yii::$app->request->post()) {        
+            $type = \Yii::$app->request->post()['type'];
+            if($type == null || ($type != 'image-gallery' && $type != 'video-gallery')){
+                return [
+                    'status' => '400',
+                    'data'=>[
+                        'userImageUpload'=>[
+                                'userProfile'=> null,
+                                'userProfileErrors'=> null
+                         ],
+                        ],
+                    'message' => 'Image Type Not Found Or InCorrect',
+                ];
+            }
+
+            if ($model->validate()) {
+                   $upload = GalleryService::upload($model, $type);
+                   if($upload['status'] == 200){
+                        return [ 
+                            'status' => $upload['status'],
+                            'message' => $upload['message'],
+                        ];
+                   }
+                        return [ 
+                            'status' => $upload['status'],
+                            'message' => $upload['message'],
+                        ];
+            }
+        }
+    }
+    
+    public function actionGetPublicGallery($type = null ,$user = null ) {
+
+       
+        $gallery = GalleryService::gallery('get',$user,$type);
+        if ($gallery) {
+            if($gallery['dataProvider']){
+                foreach($gallery['dataProvider'] as $item){
+                    if($item->show_on == 'image-gallery')
+                        $item->image_name = UserProfileImage::getGalleryImagePath($item);                            
+
+                    elseif($item->show_on == 'video-gallery')
+                        $item->image_name = UserProfileImage::getGalleryVideoPath($item);              
+              }
+        }
+                return [
+                    'status' => '201',
+                    'message' => 'Successfully found record',
+                    'data'=>$gallery
+                ];
+            }
+            return [ 
+                'status' => '404',
+                'data'=>[],
+                'message' => 'Record not found'
+            ];
+    }
+
+    public function actionGetGallery($type = null ,$user = null ) {
+
+        if($user==null){
+            $user =  \Yii::$app->user->id;
+        }        
+
+        $gallery = GalleryService::gallery('get',$user,$type);
+        if ($gallery) {
+            if($gallery['dataProvider']){
+                foreach($gallery['dataProvider'] as $item){
+                    if($item->show_on == 'image-gallery')
+                        $item->image_name = UserProfileImage::getGalleryImagePath($item);                            
+
+                    elseif($item->show_on == 'video-gallery')
+                        $item->image_name = UserProfileImage::getGalleryVideoPath($item);              
+              }
+        }
+                return [
+                    'status' => '201',
+                    'message' => 'Successfully found record',
+                    'data'=>$gallery
+                ];
+            }
+            return [ 
+                'status' => '404',
+                'data'=>[],
+                'message' => 'Record not found'
+            ];
+    }
+    
+    public function actionDeleteGallery($id) {
+        if ($id) {
+            $model = GalleryService::gallery('delete', null, null, null, $id);
+            if ($model) {
+                 return [
+                    'status' => '201',
+                    'message' => 'Successfully deleted',
+                ];
+            }
+        }
+           return [
+                    'status' => '404',
+                    'message' => 'Record not found'
+                ];
+    }
+    
     public function actionAddAddress() {
 
         $model = new UserAddress;
@@ -202,7 +353,7 @@ class ProfileController extends Controller
                     'status' => '201',
                     'message' => 'Address Added successfully',
                     'customerAddressCreate'=> 
-                                ['customerAddress' => $result ],
+                                ['customerAddress' => DataHelper::serializeAddress($result) ],
                 ];
             }
             return [ 
@@ -235,22 +386,27 @@ class ProfileController extends Controller
         $uid = ($uid!='')?$uid:\Yii::$app->user->id;
         $userAddress = UserAddressService::userAddress('get', $uid);
         foreach($userAddress as $address){
-            $addressArr = [
-                'id' => $address->id,
-                'country' => [
-                    'id' => $address->country->id,
-                    'country_name' => $address->country->title
-                ],
-                'first_name' => $address->first_name,
-                'last_name' => $address->last_name,
-                'phone_number' => $address->phone_number,
-                'state' => $address->state,
-                'city' => $address->city,
-                'area' => $address->area,
-                'postal_code' => $address->postal_code,
-                'address' => $address->address,
-                'default' => $address->default
-            ];
+            // $addressArr = [
+            //     'id' => $address->id,
+            //     'country' => [
+            //         'id' => $address->country->id,
+            //         'country_name' => $address->country->title,
+            //         'iso' =>$address->country->iso_code_2,
+                    
+            //     ],
+            //     'first_name' => $address->first_name,
+            //     'last_name' => $address->last_name,
+            //     'phone_number' => $address->phone_number,
+            //     'state' => $address->state,
+            //     'city' => $address->city,
+            //     'area' => $address->area,
+            //     'postal_code' => $address->postal_code,
+            //     'address' => $address->address,
+            //     'default' => $address->default
+            // ];
+            $addressArr = DataHelper::serializeAddress($address);    
+
+
             array_push($userAddressArr,$addressArr);
         }
         return $userAddressArr;
@@ -320,8 +476,8 @@ class ProfileController extends Controller
                     'status' => '201',
                     'message' => 'Address Updated successfully',
                     'customerAddressUpdate'=> 
-                                ['customerAddress' => $result ,
-                                'customer' => $this->serializeUser($this->findModel()) ],
+                                ['customerAddress' => DataHelper::serializeAddress($result) ,
+                                'customer' => DataHelper::serializeUser($this->findModel()) ],
                                
                 ];
             }
@@ -350,6 +506,57 @@ class ProfileController extends Controller
         ];
     }
 
+    public function actionBasicInfo() {
+
+        $user = User::find()->where(['id' => \Yii::$app->user->id])->one();
+
+        if (Yii::$app->request->post()) {
+            $dataObj = Yii::$app->request->post();
+            
+            $countryId = 0;
+            if(isset($dataObj['User']['country'])){
+                $country = UserAddressService::getCountry4mIso($dataObj['User']['country']);
+                $countryId = $country->id;
+            }        
+            $user->attributes = $dataObj;
+            $user->name = $dataObj['User']['name'];
+            $user->phone = $dataObj['User']['phone'];
+            $user->city = $dataObj['User']['city'];
+            $user->state = $dataObj['User']['state'];
+            $user->country = $countryId;
+
+            if ($user->save()) {
+                return [
+                    'status' => '201',
+                    'user' => Yii::$app->runAction('user/profile/index',[]),
+                    'message' => 'Profile successfully Updated',
+                ];
+            }
+            return [ 
+                'status' => '400',
+                'data'=>[
+                    'profileUpdate'=>[
+                            'profile'=> null,
+                            'profileErrors'=>$user->getErrors()
+                     ],
+                    
+                    ],
+                'message' => 'Invalid Data',
+            ];
+        }
+
+        return [ 
+            'status' => '400',
+            'data'=>[
+                'profileUpdate'=>[
+                        'profile'=> null,
+                        'profileErrors'=> null
+                 ],
+                
+                ],
+            'message' => 'No Data Found',
+        ];
+    }
 
     public function actionProfile() {
         $userTalent = UserTalent::find()->where(['user_id' => \Yii::$app->user->id])->one();
@@ -360,7 +567,41 @@ class ProfileController extends Controller
 
         if (Yii::$app->request->post()) {
             $dataObj = Yii::$app->request->post();
-            $userTalent->attributes = $dataObj;
+            if(isset($dataObj['industry_id']) && $dataObj['industry_id'] != null){
+                $userTalent->industry_id = $dataObj['industry_id'];
+            }else{
+                $userTalent->industry_id = null;
+            }
+            if(isset($dataObj['talent_id']) && $dataObj['talent_id'] != null){
+                $userTalent->talent_id = $dataObj['talent_id'];
+            }else{
+                $userTalent->talent_id = null;
+            }
+            if(isset($dataObj['gender']) && $dataObj['gender'] != null){
+                $userTalent->gender = $dataObj['gender'];
+            }else{
+                $userTalent->gender = null;
+            }
+            if(isset($dataObj['dj_genre_id']) && $dataObj['dj_genre_id'] != null){
+                $userTalent->dj_genre_id = $dataObj['dj_genre_id'];
+            }else{
+                $userTalent->dj_genre_id = null;
+            }
+            if(isset($dataObj['instrument_id']) && $dataObj['instrument_id'] != null){
+                $userTalent->instrument_id = $dataObj['instrument_id'];
+            }else{
+                $userTalent->instrument_id = null;
+            }
+            if(isset($dataObj['instrument_spec_id']) && $dataObj['instrument_spec_id'] != null){
+                $userTalent->instrument_spec_id = $dataObj['instrument_spec_id'];
+            }else{
+                $userTalent->instrument_spec_id = null;
+            }
+            if(isset($dataObj['music_genre_id']) && $dataObj['music_genre_id'] != null){
+                $userTalent->music_genre_id = $dataObj['music_genre_id'];
+            }else{
+                $userTalent->music_genre_id = null;
+            }
             $userTalent->user_id = \Yii::$app->user->id;
             $userTalent->created_at = time();
             $userTalent->created_by = \Yii::$app->user->id;
@@ -371,6 +612,7 @@ class ProfileController extends Controller
                 return [
                     'status' => '201',
                     'message' => 'Profile successfully Updated',
+                    'user' => Yii::$app->runAction('user/profile/index',[]),
                 ];
             }
             return [ 
@@ -401,12 +643,14 @@ class ProfileController extends Controller
 
     public function actionPlan(){
         $plansArr = [];
-        $plans = Membership::find()->where(['status' => 'active', 'is_deleted' => 0])
+        $plans = Membership::find()->where(['status' => 'active', 
+                                            'is_deleted' => 0,
+                                            'is_main' => 1])
                 ->orderBy('sort ASC')
                 ->all();
         $i=0;
         foreach($plans as $plan){
-           $plansArr[$i] = DataHelper::serializeMemberShipPlan($plan);
+           $plansArr[$i] = DataHelper::serializeMemberShipPlan($plan,true);
            $i++;
         }
         if($plansArr != null) {
@@ -573,9 +817,184 @@ class ProfileController extends Controller
         ];
     }
 
+    public function actionGetTalents()
+    {
+        $talentArr = [];
+        $talents = UserTalent::find()->where(['user_id' => Yii::$app->user->id])->all();
+        $i=0;
+        foreach($talents as $talent)
+        {
+            $talentArr[$i] = DataHelper::serializeTalents($talent);
+            $i++;
+        }
+        return $talentArr;
+    }
+
+    public function actionGetFunds()
+    {
+        $fundsArr = [];
+        $limit = null;
+        if(isset(\Yii::$app->request->get()['limit']) && \Yii::$app->request->get()['limit'] !== null){
+            $limit = \Yii::$app->request->get()['limit'];
+        }
+
+        $userFunds = UserMlmService::getUserFunds(Yii::$app->user->id,$limit);
+        $i=0;
+        $totalPrice = 0;
+        $fundsArr['data'] = [];
+        foreach($userFunds['results'] as $fund)
+        {
+            $fundsArr['data'][$i] = DataHelper::serializeFunds($fund);
+            $totalPrice += $fund['amount'];
+            $i++;
+        }
+
+        $fundsArr['totalPrice'] = $totalPrice;
+        $fundsArr['grandTotalPrice'] = $userFunds['total'];
+        $fundsArr['totalItems'] = $userFunds['pages']->totalCount;
+        $fundsArr['currentPages'] = $userFunds['pages']->getPage()+1;
+        $fundsArr['totalPages'] = $userFunds['pages']->getPageCount();
+        return $fundsArr;
+    }
+
+    public function actionGetAllTalentUsers(){
+        $dataObj = \Yii::$app->request->get();
+        $searchName = isset($dataObj['query']) ? $dataObj['query'] : null;
+        $limit = isset($dataObj['limit']) ? $dataObj['limit'] : 10;
+        $talentsArr = [];
+        $condition = '';
+
+        $dataProvider = UserTalent::find();
+        if ($searchName != null) {
+            $dataProvider = $dataProvider->leftJoin('industry', 'industry.`id` = user_talent.`industry_id`');
+            $dataProvider = $dataProvider->leftJoin('talent_master', 'talent_master.`id` = user_talent.`talent_id`');
+            $condition .= 'industry.name LIKE (\'%' . $searchName . '%\') OR talent_master.name LIKE (\'%' . $searchName . '%\')';
+            $dataProvider = $dataProvider->where($condition);
+        }
+        $countQuery = clone $dataProvider;
+        $pages = new Pagination(['totalCount' => $countQuery->count()]);
+        $pages->defaultPageSize = $limit;
+        $dataProvider = $dataProvider->offset($pages->offset)->limit($pages->limit)->all();
+        $i=0;
+        foreach($dataProvider as $talent){
+            $talentsArr['data'][$i] = DataHelper::serializeTalents($talent);
+            $i++;
+        }
+        $talentsArr['totalItems'] = $pages->totalCount;
+        $talentsArr['currentPages'] = $pages->getPage()+1;
+        $talentsArr['totalPages'] = $pages->getPageCount();
+        return $talentsArr;
+    }
+
+    public function actionImage()
+    {
+        // dd(\Yii::$app->request->post());
+        $model = new PhotosForm;
+        if (\Yii::$app->request->post()) {
+            
+            $type = \Yii::$app->request->post()['type'];
+            if($type == null || ($type != 'profile' && $type != 'banner')){
+                return [ 
+                    'status' => '400',
+                    'data'=>[
+                        'userImageUpload'=>[
+                                'userProfile'=> null,
+                                'userProfileErrors'=> null
+                         ],
+                        
+                        ],
+                    'message' => 'Image Type Not Found Or InCorrect',
+                ];
+            }
+               
+            if ($model->validate()) {
+                  
+                if($type == 'profile'){
+                    $path = UserProfileImage::getfullPath(UserProfileImage::$show_on_profile);
+                }else{
+                    $path = UserProfileImage::getfullPath(UserProfileImage::$show_on_banner);
+                }
+                $name = \Yii::$app->security->generateRandomString();
+                if (is_dir($path)) {
+                    UserProfileImage::deletePreviousFile($path);
+                }
+                if (!is_dir($path)) {
+                    BaseFileHelper::createDirectory($path);
+                }
+                
+                if ($model->files[0]->saveAs($path . $name . '.' . $model->files[0]->extension) !== false) {
+                    if($type == 'profile'){
+                        $image = UserProfileImage::createImage($name, $model->files[0]->extension, UserProfileImage::$show_on_profile);
+                    }else{
+                        $image = UserProfileImage::createImage($name, $model->files[0]->extension, UserProfileImage::$show_on_banner);
+                    }
+                    if ($image->save()) {
+                        return [ 
+                            'status' => '200',
+                            'data'=>[
+                                'userImageUpload'=>[
+                                        'userProfile'=> null,
+                                        'userProfileErrors'=> null,
+                                        'profileImage' => UserProfileImage::getProfileImage(),
+                                        'bannerImage' => UserProfileImage::getBannerImage(),
+                                 ],
+                                
+                                ],
+                            'user' => Yii::$app->runAction('user/profile/index',[]),  
+                            'message' => 'Image Successfully Uploaded',
+                        ];
+                    }
+                    return [ 
+                        'status' => '400',
+                        'data'=>[
+                            'userImageUpload'=>[
+                                    'userProfile'=> null,
+                                    'userProfileErrors'=> $image->getErrors(),
+                             ],
+                            
+                            ],
+                        'message' => 'Invalid Data',
+                    ];
+                }
+                return [ 
+                    'status' => '400',
+                    'data'=>[
+                        'userImageUpload'=>[
+                                'userProfile'=> null,
+                                'userProfileErrors'=> $model->files[0]->error,
+                         ],
+                        
+                        ],
+                    'message' => 'Invalid Data',
+                ];
+            }
+            return [ 
+                'status' => '400',
+                'data'=>[
+                    'userImageUpload'=>[
+                            'userProfile'=> null,
+                            'userProfileErrors'=> $model->getErrors(),
+                     ],
+                    
+                    ],
+                'message' => 'Invalid Data',
+            ];
+        }
+        return [ 
+            'status' => '400',
+            'data'=>[
+                'userImageUpload'=>[
+                        'userProfile'=> null,
+                        'userProfileErrors'=> null
+                 ],
+                
+                ],
+            'message' => 'Request Must Be Post With Image',
+        ];
+    }
+
     public function actionSignup(){ 
         
-
         $form = new SignupForm;
 
         if(Yii::$app->request->post()){
@@ -584,6 +1003,10 @@ class ProfileController extends Controller
                 try {
                     $this->service->signup($form);
                     $form = $this->service->unsetFormPwd($form);
+     
+                    if (isset(Yii::$app->request->post()['referral']) && Yii::$app->request->post()['referral'] != NULL) {
+                        UserReferralService::createReferrals(Yii::$app->request->post()['referral'], $form->email);
+                    }
                     return [ 
                         'status' => '201',
                         'data'=>[
@@ -629,54 +1052,9 @@ class ProfileController extends Controller
         return User::findOne(\Yii::$app->user->id);
     }
 
-    private function getDefaultAddress($addresses){
-        foreach($addresses as $address){
-            if($address['default']===1){
-                return $address;
-            }
-        }
-        return null;
-    }
+   
 
     
-
-    private function serializeUser(User $user): array
-    {
-        
-        $addresses = $this->actionGetAddress($user->id);
-        $defaultAddress = $this->getDefaultAddress($addresses);
-        $subscriptions = $user->getSubscription('membership');
-        
-        return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'phone' => $user->phone,
-            'country' => $user->country,
-            'date' => [
-                'created' => DateHelper::formatApi($user->created_at),
-                'updated' => DateHelper::formatApi($user->updated_at),
-            ],
-            'status' => [
-                'code' => $user->status,
-                'name' => UserHelper::statusName($user->status),
-            ],
-            'membership' =>  DataHelper::serializeMemberShips($subscriptions),
-            'addresses'=> $addresses,
-            'defaultAddress' => $defaultAddress,
-            'talent' => [
-                "id" => $user->userTalent->id,
-                "industry"=> $user->userTalent->industry,
-                "talent_master" => $user->userTalent->talent,
-                "gender" => $user->userTalent->gender,
-                "dj_genre" => $user->userTalent->djgenre,
-                "instrument" => $user->userTalent->instrument,
-                "instrument_spec" => $user->userTalent->instrumentspecification,
-                "music_genre" => $user->userTalent->musicgenre,
-            ],
-            'update_talent_profile' => $user->canUpdateProfile(),
-        ];
-    }
 }
 
 /**

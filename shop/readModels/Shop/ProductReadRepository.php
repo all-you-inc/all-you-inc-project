@@ -58,7 +58,7 @@ class ProductReadRepository
         return $this->getProvider($query);
     }
 
-    public function getAllProducts($keyword = ''): DataProviderInterface
+    public function getAllProducts($keyword = '',$talentId=null): DataProviderInterface
     {
         $query = Product::find()->alias('p')->active('p')->with('photos');
         if($keyword!=''){
@@ -68,6 +68,10 @@ class ProductReadRepository
                 ['like', 'p.description', $keyword],
             ]);
 
+        }
+        
+        if($talentId!=null){
+            $query->andWhere(["talent_id"=>$talentId]);
         }
         return $this->getProvider($query);
     }
@@ -84,7 +88,7 @@ class ProductReadRepository
         return $this->getProvider($query);
     }
 
-    public function getAllByCategoryName($categor,$pid): DataProviderInterface
+    public function getAllByCategoryName($category,$pid): DataProviderInterface
     {
         $query = Product::find()->alias('p')->active('p')->with('photos', 'category');
         $query->joinWith(['category c'], false);
@@ -117,7 +121,7 @@ class ProductReadRepository
 
     public function getFeatured($limit): array
     {
-        return Product::find()->active()->with('mainPhoto')->orderBy(['id' => SORT_DESC])->limit($limit)->all();
+        return Product::find()->where(['status' => 1, 'is_locked'=>0])->active()->with('mainPhoto')->orderBy(['id' => SORT_DESC])->limit($limit)->all();
     }
 
     public function find($id): ?Product

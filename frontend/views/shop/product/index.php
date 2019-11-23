@@ -30,12 +30,13 @@ $this->params['breadcrumbs'][] = $this->title;
             <?=
             GridView::widget([
                 'dataProvider' => $dataProvider,
-                'filterModel' => $searchModel,
+//                'filterModel' => $searchModel,
                 'rowOptions' => function (Product $model) {
                     return $model->quantity <= 0 ? ['style' => 'background: #fdc'] : [];
                 },
                         'columns' => [
                             [
+                                 'attribute' => 'Photo',
                                 'value' => function (Product $model) {
                                     return $model->mainPhoto ? Html::img($model->mainPhoto->getThumbFileUrl('file', 'admin')) : null;
                                 },
@@ -67,6 +68,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'filter' => $searchModel->statusList(),
                                         'value' => function (Product $model) {
                                             return ProductHelper::statusLabel($model->status);
+                                        },
+                                        'format' => 'raw',
+                                    ],
+                                    [
+                                        'attribute' => 'locked status',
+                                        'filter' => $searchModel->statusList(),
+                                        'value' => function (Product $model) {
+                                            return ProductHelper::lockStatus($model->is_locked);
                                         },
                                         'format' => 'raw',
                                     ],

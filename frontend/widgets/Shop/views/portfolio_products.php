@@ -13,6 +13,7 @@ use yii\helpers\Url;
     </div>
     <div class="col-md-12">
         <div class="row row-sm">
+            <?php if($products == null){ echo '<h2>NO PRODUCT FOUND</h2>'; }else{ ?>
             <?php foreach ($products as $product):
                 $url = Url::to(['product', 'id' => $product->id]);
                 ?>
@@ -44,7 +45,7 @@ use yii\helpers\Url;
                         </div><!-- End .product-details -->
                     </div><!-- End .product -->
                 </div>
-            <?php endforeach; ?>
+            <?php endforeach; } ?>
 
         </div><!-- End .row -->
 

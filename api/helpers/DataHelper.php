@@ -9,8 +9,17 @@ use shop\entities\Shop\Product\Product;
 use shop\cart\CartItem;
 use shop\cart\cost\Discount;
 use common\models\currency\Currency;
+use common\models\industry\Industry;
 use yii\data\DataProviderInterface;
 use yii\helpers\Url;
+use common\services\UserAccessService;
+use common\services\UserAddressService;
+use common\models\userprofileimage\UserProfileImage;
+use shop\helpers\UserHelper;
+use api\helpers\DateHelper;
+use shop\entities\User\User;
+use common\services\NotificationService;
+
 
 class DataHelper
 {
@@ -29,6 +38,9 @@ class DataHelper
                 "availableForSale" => false,
                 "productType" => $product->category->name,
                 'quantity' => $product->quantity,
+                'status' => $product->status,
+                'weight' => $product->weight,
+                'isLocked' => $product->is_locked,
                 "onlineStoreUrl" => "",
                 "options" => [],
                 "variants" => [
@@ -48,7 +60,9 @@ class DataHelper
                     "edges" => 
                       array_map(function (Photo $photo) {
                         return [
-                            'src' => $photo->getThumbFileUrl('file', 'catalog_list')
+                            'id' => $photo->id,
+                            'src' => $photo->getThumbFileUrl('file', 'catalog_list'),
+                            'sort' => $photo->sort
                            
                         ];
                     }, $product->photos)
@@ -58,13 +72,6 @@ class DataHelper
                     'name' => $product->category->name,
                     '_links' => [
                         'self' => ['href' => Url::to(['category', 'id' => $product->category->id], true)],
-                    ],
-                ],
-                'brand' => [
-                    'id' => $product->brand->id,
-                    'name' => $product->brand->name,
-                    '_links' => [
-                        'self' => ['href' => Url::to(['brand', 'id' => $product->brand->id], true)],
                     ],
                 ],
                 'price' => [
@@ -95,9 +102,16 @@ class DataHelper
     }
     /** */
 
+    public static function serializeProductShort($product) {
+        return [
+            'id' => $product->id,
+            'name' => $product->name,
+            'talent_id' => $product->talent_id
+        ];
+    }
+    
     /*** Category Serialization Methods */
-    public static function serializeCategory($category)
-    {
+    public static function serializeCategory($category) {
         return [
 
                 'id' => $category->id,
@@ -111,8 +125,7 @@ class DataHelper
 
     /*** Brand Serialization Methods */
 
-    public static function serializeBrand($brand)
-    {
+    public static function serializeBrand($brand) {
         return [
 
                 'id' => $brand->id,
@@ -155,7 +168,7 @@ class DataHelper
 
     }
 
-    public static function cartLineItems($items){
+    public static function cartLineItems($items) {
         $lineItems = [];
 
         foreach($items as $item){
@@ -192,7 +205,7 @@ class DataHelper
         foreach($subscriptions as $subscription){
             $memberships[] = [
                         'subscription_id'=>$subscription->id,
-                        'membership'=>self::serializeMemberShipItem($subscription->ref_id),
+                        'plan'=>self::serializeMemberShipItem($subscription->ref_id),
             ];
         }
 
@@ -204,13 +217,25 @@ class DataHelper
         $model = Membership::find()->where("id = :id",['id'=>$id])->one();
         
         if($model!=null && $model instanceof Membership) {
-            return ['id'=>$model->id,'title'=>$model->title,'price'=>$model->price];
+            return self::serializeMemberShipPlan($model,true);
         }
         return [];
 
     }
 
-    public static function serializeMemberShipPlan($plan){
+
+    public static function serializeMemberShipItemSignUp($id){
+        $model = Membership::find()->where("id = :id",['id'=>$id])->one();
+        
+        if($model!=null && $model instanceof Membership) {
+            return self::serializeMemberShipPlan($model,true);
+        }
+        return [];
+
+    }
+
+
+    public static function serializeMemberShipPlan($plan,$includeGroup=false){
         return [
             "id" => $plan->id,
             "title" => $plan->title,
@@ -221,8 +246,24 @@ class DataHelper
             "description" => $plan->description,
             "category" => $plan->category,
             "items" => static::serializeMSItems($plan->msItems),
+            "group" => ($includeGroup)?self::getGroupPlans($plan):[]
         ];
     }
+
+    public static function getGroupPlans($plan){
+            $groupItems = Membership::find()
+                                        ->where("group_id = :gid AND id <> :id " ,
+                                                 [':gid'=>$plan->group_id,
+                                                 ":id"=>$plan->id])
+                                        ->all();
+            
+            $response = [];
+            foreach($groupItems as $item){
+                $response[] = self::serializeMemberShipPlan($item);
+            }
+            return $response;
+    }
+
 
     public static function serializeMSItems($msItems){
         $msItemsArr = [];
@@ -256,5 +297,266 @@ class DataHelper
             'title' => $type->title,
             'key' => $type->key
         ];
+    }
+
+    public static function serializeTalents($talent){
+        return [
+            'id' => $talent->id,
+            'profile' => static::serializeUserShort($talent->user),
+            'industry' => static::serializeIndustry($talent->industry),
+            'talent' => static::serializeTalent($talent->talent),
+            'gender' => $talent->gender,
+            'djGenre' => static::serializeDjGenre($talent->djgenre),
+            'instrument' => static::serializeInstrument($talent->instrument),
+            'instrumentSpec' => static::serializeInstrumentSpec($talent->instrumentspecification),
+            'musicGenre' => static::serializeMusicGenre($talent->musicgenre),
+            'created_at' => $talent->created_at,
+            'created_by' => $talent->created_by,
+            'modified_at' => $talent->modified_at,
+            'modified_by' => $talent->modified_by,
+        ];
+    }
+
+    public static function serializeIndustry($industry){
+        return [
+            'id' => $industry->id,
+            'name' => $industry->name,
+        ];
+    }
+
+    public static function serializeTalent($talent){
+        return [
+            'id' => $talent->id,
+            'name' => $talent->name,
+        ];
+    }
+
+    public static function serializeDjGenre($dj){
+        return [
+            'id' => $dj->id,
+            'name' => $dj->name,
+        ];
+    }
+
+    public static function serializeInstrument($instrument){
+        return [
+            'id' => $instrument->id,
+            'name' => $instrument->name,
+        ];
+    }
+
+    public static function serializeInstrumentSpec($instrumentSpec){
+        return [
+            'id' => $instrumentSpec->id,
+            'name' => $instrumentSpec->name,
+        ];
+    }
+
+    public static function serializeMusicGenre($music){
+        return [
+            'id' => $music->id,
+            'name' => $music->name,
+        ];
+    }
+
+    public static function serializeFunds($fund){
+        return [
+            "id" => $fund['id'],
+            "name" => $fund['name'],
+            "type" => $fund['type'],
+            "amount" => $fund['amount'],
+            "referral_code" => $fund['referral_code'],
+            "referral_user" => $fund['referral_user'],
+            "transaction_id" => $fund['transaction_id'],
+            "created_at" => $fund['created_at'],
+        ];
+    }
+
+    public static function serializeAddress($address){
+        
+        return [
+            'address' => $address->address,
+            'area'=> $address->area,
+            'city'=> $address->city,
+            'country'=> ($address->country!=null)?self::serializeCountry($address->country):'',
+            'created_at' => $address->created_at,
+            'created_by'=> $address->created_by,
+            'default'=> $address->default,
+            'first_name'=> $address->first_name,
+            'id'=> $address->id,
+            'is_deleted'=> $address->is_deleted,
+            'last_name'=> $address->last_name,
+            'modified_at'=> $address->modified_at,
+            'modified_by'=> $address->modified_by,
+            'phone_number'=> $address->phone_number,
+            'postal_code'=> $address->postal_code,
+            'state' => $address->state,
+            'user_id' => $address->user_id,
+        ];
+    }
+
+    public static function serializeCountry($country){
+        return [
+            'id'=>$country->id,
+            'country_name'=>$country->title,
+            'iso'=>$country->iso_code_2
+        ];
+    }
+
+    public static function serializeUserShort($user){
+
+        // d($user);
+        if(is_numeric($user->country)){
+            $cc = UserAddressService::getCountryFrmId((int)$user->country);
+            $country = DataHelper::serializeCountry($cc);
+        }else{
+           
+            $country = $user->country;
+        }
+        
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'country' => $country,
+            'city' => $user->city,
+            'state' => $user->state,
+            'profileImage' => UserProfileImage::getProfileImage($user->id),
+            'bannerImage' => UserProfileImage::getBannerImage($user->id),
+            'referralCode' => $user->referral_code,
+        ];
+    }
+
+    public static function serliazeMessageThread($thread){
+        return [
+            'id' => $thread['id'],
+            "title" => $thread['title'],
+            "description" => $thread['description'],
+            "creator" => $thread['creator'],
+            "unread_count" => $thread['unread_count'],
+            "created_by" => self::serializeUserShort($thread['created_by']),
+            "created_at" => DateHelper::formatDate($thread['created_at']),
+            "participants"=> self::serliazeParticipants($thread["participants"])
+         
+        ];
+    }
+
+    public static function serliazeParticipants($participants){
+        $response = [];
+        foreach($participants as $participant){
+              $response[] = self::serializeUserShort($participant->user);  
+        }
+        return $response;
+    }
+
+    public static function serliazeMessage($message){
+       
+        return [
+            'id' => $message->id,
+            "body" => $message->body,
+            "created_at" => DateHelper::formatDate($message->created_at),
+            "modified_at" => $message->modified_at,
+            "thread_id" => $message->thread_id,
+            "created_by" => self::serializeUserShort($message->created)
+        ];
+    }
+
+    public static function serializeUser(User $user): array
+    {
+        
+        $addresses = self::getSerializeUserAddresses($user->id);
+        $defaultAddress = self::getSerializeDefaultAddress($addresses);
+        $subscriptions = $user->getSubscription('membership');
+        $country = [];
+
+        if($user->country){
+            $cc = UserAddressService::getCountryFrmId((int)$user->country);
+            $country = self::serializeCountry($cc);
+        }
+
+        $talents = [];
+        foreach($user->userTalent as $talent)
+            $talents[] = self::serializeTalents($talent);
+ 
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'country' => $country,
+            'city' => $user->city,
+            'state' => $user->state,
+            'profileImage' => UserProfileImage::getProfileImage($user->id),
+            'bannerImage' => UserProfileImage::getBannerImage($user->id),
+            'signup_plan' => self::serializeMemberShipItemSignUp($user->membership_id),
+            'referralCode' => $user->referral_code,
+            'date' => [
+                'created' => DateHelper::formatApi($user->created_at),
+                'updated' => DateHelper::formatApi($user->updated_at),
+            ],
+            'status' => [
+                'code' => $user->status,
+                'name' => UserHelper::statusName($user->status),
+            ],
+            'membership' =>  self::serializeMemberShips($subscriptions),
+            'addresses'=> $addresses,
+            'defaultAddress' => $defaultAddress,
+            'talent' => $talents,
+            'update_talent_profile' => $user->canUpdateProfile(),
+        ];
+    }
+
+    
+    public static function getSerializeUserAddresses($uid=''){
+        $userAddressArr = [];
+        $uid = ($uid!='')?$uid:\Yii::$app->user->id;
+        $userAddress = UserAddressService::userAddress('get', $uid);
+        foreach($userAddress as $address){
+            $addressArr = self::serializeAddress($address);    
+            array_push($userAddressArr,$addressArr);
+        }
+        return $userAddressArr;
+    }
+
+    public function getSerializeDefaultAddress($addresses){
+        foreach($addresses as $address){
+            if($address['default']===1){
+                return $address;
+            }
+        }
+        return null;
+    }
+    
+    public static function serliazeNotification($notification) {
+        $originator = $notification->originator;
+        $user = $notification->user;
+        $model = $notification->source_class;
+        $source = $model::findOne($notification->source_pk);
+        $class = \Yii::$container->get($notification->class);
+
+        return [
+            'title' => $class->title,
+            'message' => self::generateNotificationMessage($user, $originator, $source, $class),
+            'event_key' => $class->notificationEventKey,
+            'created_at' => $notification->created_at,
+            'seen' => $notification->seen,
+            'source' => $source,
+            'originator' => self::serializeUserShort($originator),
+        ];
+    }
+    
+    public static function serializeNotificationSetting($notificationSetting) {
+        return [
+            'id' => $notificationSetting['id'],
+            'event' => $notificationSetting['event'],
+            'email' => $notificationSetting['email'] ?? 0,
+            'web' => $notificationSetting['web'] ?? 0,
+            'mobile' => $notificationSetting['mobile'] ?? 0,
+        ];        
+    }
+    
+    private static function generateNotificationMessage($user, $originator, $source, $class) {
+        return \Yii::$app->controller->renderPartial('@common/modules/' . $class->moduleId . '/views/' . $class->viewNameText, ['originator' => $originator, 'user' => $user, 'source' => $source]);
     }
 }

@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <?= Html::beginForm() ?>
             <div class="form-group required-field">
-                <label>Industry</label>
+                <label>Whats your Industry</label>
                 <div class="select-custom">
                     <select class="form-control" required="" name="industry_id" id="selected-industry">
                         <option value="">Please Select Any Industry</option>
@@ -36,7 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div><!-- End .select-custom -->
             </div><!-- End .form-group -->
             <div class="form-group required-field" id="talent">
-                <label>Talent</label>
+                <label>Whats your Talent</label>
                 <div class="select-custom" id="talent-dd">
                     <select class="form-control" required="" name="talent_id" onchange="talent(this.value)" id="selected-talent">
                         <option value="">Please Select Any Talent</option>
@@ -44,7 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div><!-- End .select-custom -->
             </div><!-- End .form-group -->
             <div class="form-group" id="gender">
-                <label>Gender</label>
+                <label>Whats your Gender</label>
                 <div class="select-custom">
                     <select class="form-control" name="gender" id="selected-gender">
                         <option value="">Please Select Any Gender</option>
@@ -55,7 +55,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div><!-- End .select-custom -->
             </div><!-- End .form-group -->
             <div class="form-group" id="group_gender">
-                <label>Gender</label>
+                <label>Whats your Gender</label>
                 <div class="select-custom">
                     <select class="form-control" name="group_gender" id="selected-group_gender">
                         <option value="">Please Select Any Gender</option>
@@ -67,7 +67,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div><!-- End .select-custom -->
             </div><!-- End .form-group -->
             <div class="form-group" id="dj_genre">
-                <label>Dj Genre</label>
+                <label>Whats your Dj Genre</label>
                 <div class="select-custom" id="dj_genre-dd">
                     <select class="form-control" name="dj_genre_id" id="selected-dj_genre">
                         <option value="">Please Select Any Dj Genre</option>
@@ -75,7 +75,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div><!-- End .select-custom -->
             </div><!-- End .form-group -->
             <div class="form-group" id="instrument">
-                <label>Instruments</label>
+                <label>Whats your Instruments</label>
                 <div class="select-custom" id="instrument-dd">
                     <select class="form-control" name="instrument_id" onchange="getinstrumentspec(this.value)" id="selected-instrument">
                         <option value="">Please Select Any Instrument</option>
@@ -83,7 +83,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div><!-- End .select-custom -->
             </div><!-- End .form-group -->
             <div class="form-group" id="instrument_spec">
-                <label>Specification</label>
+                <label>Whats your Specification</label>
                 <div class="select-custom" id="instrument_spec-dd">
                     <select class="form-control" name="instrument_spec_id" id="selected-instrument_spec">
                         <option value="">Please Select Any Specification</option>
@@ -91,7 +91,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div><!-- End .select-custom -->
             </div><!-- End .form-group -->
             <div class="form-group" id="music_genre">
-                <label>Music Genre</label>
+                <label>Whats your Music Genre</label>
                 <div class="select-custom" id="music_genre-dd">
                     <select class="form-control" name="music_genre_id" id="selected-music_genre">
                         <option value="">Please Select Any Music Genre</option>
@@ -99,9 +99,14 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div><!-- End .select-custom -->
             </div><!-- End .form-group -->
             <div class="form-footer">
-                <?= Html::submitButton('Save', ['class' => 'btn btn-primary', 'name' => 'signup-button']) ?>
+                <?= Html::submitButton('Save', ['class' => 'btn btn-primary', 'name' => 'signup-button', 'title' => 'Complete Your Bio Info']) ?>
+                <?= Html::endForm() ?>  
+                <strong>OR</strong> 
+                <div class="login-signup-btn-padding">
+                    <a href="<?= \yii\helpers\Url::home() ?>" class="paction product-promote-btn login-signup-btn btn-secondary" title="Go to your Dashboard">SKIP</a>
+                </div> 
             </div> 
-            <?= Html::endForm() ?>
+
         </div>
     </div>
     <div class="mb-5"></div><!-- margin -->

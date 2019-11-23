@@ -14,17 +14,24 @@ use common\services\UserPaymentService;
 use common\services\SquarePaymentService;
 use shop\entities\User\User;
 use common\models\usersquareinfo\UsersSquareInfo;
+use common\models\userfunds\UserFunds;
+use shop\repositories\UserRepository;
+use shop\services\TransactionManager;
 
 class CheckoutController extends Controller
 {
     private $cart;
     private $service;
+    private $users;
+    private $transaction;
 
-    public function __construct($id, $module, OrderService $service, Cart $cart, $config = [])
+    public function __construct($id, $module, OrderService $service, TransactionManager $transaction, UserRepository $users, Cart $cart, $config = [])
     {
         parent::__construct($id, $module, $config);
         $this->cart = $cart;
         $this->service = $service;
+        $this->users = $users;
+        $this->transaction = $transaction;
     }
 
     public function verbs(): array
@@ -52,7 +59,7 @@ class CheckoutController extends Controller
                         $payment = $this->actionPayment($order->id, $order['cost'], $this->cart, $paymentGateway);
                         $this->cart->clear();
                         if ($payment) {
-                            $response->setStatusCode(204);
+                            // $response->setStatusCode(204);
                             return ['data'=>['completedAt'=>time()]];
                         }
                         $response->setStatusCode(400);
@@ -91,10 +98,24 @@ class CheckoutController extends Controller
         }
         $payment = UserPaymentService::createPayment($params);
         if ($payment) {
-            foreach ($cart->getItems() as $item) {
-                $product = $item->getProduct();
-                UserMlmService::createSalesOrderMlm($product->price_new, $product->id, Yii::$app->user->id);
-            }
+            $this->transaction->wrap(function () use ($cart) {
+                if ($cart->getItems()) {
+                    foreach ($cart->getItems() as $item) {
+                        $product = $item->getProduct();
+                        $transaction_id = UserMlmService::createSalesOrderMlm($product->price_new, $product->id, Yii::$app->user->id);
+                        if ($transaction_id) {
+                            $funds = UserFunds::find()->where(['transaction_id' => $transaction_id])->all();
+                            if ($funds) {
+                                foreach ($funds as $fund) {
+                                    if ($fund['amount'] != 0.00) {
+                                        $this->users->sendEmail($fund, 'funds/user/fund-html', 'funds/user/fund-text', $fund->user->email, 'Your AllYouInc Wallet Transection For Product');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
         return TRUE;
     }

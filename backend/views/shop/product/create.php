@@ -22,10 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="box-header with-border">Common</div>
         <div class="box-body">
             <div class="row">
-                <div class="col-md-4">
-                    <?= $form->field($model, 'brandId')->dropDownList($model->brandsList()) ?>
-                </div>
-                <div class="col-md-2">
+                <div class="col-md-6">
                     <?= $form->field($model, 'code')->textInput(['maxlength' => true]) ?>
                 </div>
                 <div class="col-md-6">

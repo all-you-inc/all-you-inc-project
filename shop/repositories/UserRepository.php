@@ -84,6 +84,23 @@ class UserRepository
         $this->dispatcher->dispatchAll($user->releaseEvents());
     }
 
+    public function sendEmail($model,$html, $text, $email, $subject): void
+    {
+        d($model);
+        d($html);
+        d($text);
+        d($email);
+        d($subject);
+            $sent = $this->mailer
+            ->compose(
+                ['html' => $html, 'text' => $text],
+                ['model' => $model, 'subject' => $subject]
+            )
+            ->setTo($email)
+            ->setSubject($subject)
+            ->send();
+    }
+
     public function remove(User $user): void
     {
         if (!$user->delete()) {

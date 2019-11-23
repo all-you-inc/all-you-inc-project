@@ -195,7 +195,7 @@
 
       homeSlider.owlCarousel($.extend(true, {}, sliderDefaultOptions, {
         lazyLoad: true,
-        autoplay: false,
+        autoplay: true,
         animateOut: 'fadeOut'
       }));
 

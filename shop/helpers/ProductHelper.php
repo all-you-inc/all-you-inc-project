@@ -16,6 +16,14 @@ class ProductHelper
         ];
     }
 
+    public static function lockList(): array
+    {
+        return [
+            0 => 'Unlocked',
+            1 => 'Locked',
+        ];
+    }
+
     public static function statusName($status): string
     {
         return ArrayHelper::getValue(self::statusList(), $status);
@@ -35,6 +43,18 @@ class ProductHelper
         }
 
         return Html::tag('span', ArrayHelper::getValue(self::statusList(), $status), [
+            'class' => $class,
+        ]);
+    }
+    
+    public static function lockStatus($status): string
+    {
+        if($status == 0) {
+            $class = 'label label-info';
+        } else {
+            $class = 'label label-danger';
+        }
+        return Html::tag('span', ArrayHelper::getValue(self::lockList(), $status), [
             'class' => $class,
         ]);
     }

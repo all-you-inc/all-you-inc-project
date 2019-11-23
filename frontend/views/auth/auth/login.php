@@ -7,6 +7,7 @@ use yii\helpers\Html;
 use yii\bootstrap\ActiveForm;
 use yii\helpers\Url;
 use common\widgets\Alert;
+
 $this->title = 'Login';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -31,15 +32,20 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php echo $form->field($model, 'username')->textInput()->label(false) ?>
                 <label>Password</label>
                 <?php echo $form->field($model, 'password')->passwordInput()->label(false) ?>
-                <?= $form->field($model, 'reCaptcha')->widget(
-                    \himiklab\yii2\recaptcha\ReCaptcha::className(),
-                    ['siteKey' => \Yii::$app->params['reCaptcha']['site-key']]
-                ) ?>
+                <?=
+                $form->field($model, 'reCaptcha')->widget(
+                        \himiklab\yii2\recaptcha\ReCaptcha::className(), ['siteKey' => \Yii::$app->params['reCaptcha']['site-key']]
+                )
+                ?>
+                <a href="<?= Html::encode(Url::to(['auth/reset/request'])) ?>" class="forget-pass"> Forgot your password?</a>
                 <div class="form-footer">
                     <button type="submit" class="btn btn-primary">LOGIN</button>
-                    <a href="<?= Html::encode(Url::to(['auth/reset/request'])) ?>" class="forget-pass"> Forgot your password?</a>
+                    <?php ActiveForm::end(); ?>
+                    <strong>OR</strong> 
+                    <div class="login-signup-btn-padding">
+                        <a href="<?= Html::encode(Url::to(['auth/signup/request'])) ?>" class="paction product-promote-btn login-signup-btn" title="SignUp">SignUp Now</a>
+                    </div>
                 </div>
-                <?php ActiveForm::end(); ?>
             </div><!-- End .col-md-6 -->
         </div><!-- End .row -->
     </div><!-- End .container -->

@@ -54,10 +54,6 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'value' => ProductHelper::statusLabel($product->status),
                                 'format' => 'raw',
                             ],
-                            [
-                                'attribute' => 'brand_id',
-                                'value' => ArrayHelper::getValue($product, 'brand.name'),
-                            ],
                             'code',
                             'name',
                             [

@@ -37,7 +37,7 @@ return [
                 ],
             ],
             'tokenParamName' => 'accessToken',
-            'tokenAccessLifetime' => 3600 * 24,
+            'tokenAccessLifetime' => 3600 * 24 * 700,
             'storageMap' => [
                 'user_credentials' => 'common\auth\Identity',
             ],
@@ -89,6 +89,7 @@ return [
             'rules' => [
                 '' => 'site/index',
                 'GET profile' => 'user/profile/index',
+                'PUT profile-basic' => 'user/profile/basic-info',
                 'POST oauth2/<action:\w+>' => 'oauth2/rest/<action>',
 
                 'GET shop/products/<id:\d+>' => 'shop/product/view',
@@ -145,7 +146,7 @@ return [
                 // Create Product
                 'POST shop/product/add' => 'shop/product/create',
                 // Update Product By Id
-                'PUT shop/product/update/<id:\d+>' => 'shop/product/update',
+                'POST shop/product/update/<id:\d+>' => 'shop/product/update',
                 // Update Product Price By Id
                 'PUT shop/product/price/<id:\d+>' => 'shop/product/price',
                 // Update Product Quantity By Id
@@ -164,6 +165,50 @@ return [
                 'GET cards' => 'user/profile/get-cards',
                 // Subscribe Plan
                 'POST plan' => 'user/purchase/plan',
+                // Get User Subscribed Items
+                'GET subscribed-Items' => 'user/profile/get-user-subscribed-items',
+                // Subscribe Addons
+                'POST addons' => 'user/purchase/addons',
+                // Get Talents
+                'GET talents' => 'user/profile/get-talents',
+                // Get Funds
+                'GET funds' => 'user/profile/get-funds',
+                // Upload Image
+                'POST image' => 'user/profile/image',
+                // Get All User Talents
+                'GET all-talents' => 'user/profile/get-all-talent-users',
+                // Get All Gallery Authorized Access
+                'GET gallery' => 'user/profile/get-gallery',
+                // Get All Public Gallery 
+                'GET gallery-public' => 'user/profile/get-public-gallery',
+                // Delete Gallery
+                'DELETE gallery' => 'user/profile/delete-gallery',
+                // Upload Gallery
+                'POST gallery' => 'user/profile/upload-gallery',
+                // Get My Team
+                'GET myteam' => 'user/profile/get-my-team',
+                // Add Product Promo Array
+                'POST product-promo' => 'shop/product/store-product-promo-session',
+                // Get Threads List
+                'GET message/threads' => 'user/message/threads',
+                // Get Messages of Threads
+                'GET message/list' => 'user/message/thread-messages',
+                // Send Messages 
+                'POST message/threads/create' => 'user/message/create-thread',
+                // Send Messages 
+                'POST message/create' => 'user/message/create',
+                // Get Dashboard
+                'GET dashboard' => 'site/dashboard',
+                // Update User | Guest Device Token
+                'POST site/device/set' => 'site/device-token',
+                // Get User Notifications
+                'GET user/notifications' => 'user/notification/get-notifications',
+                // Mark User Notifications Seen
+                'PUT user/notifications/see' => 'user/notification/mark-notifications-seen',
+                // Get Notification Settings
+                'GET user/notifications/settings' => 'user/notification/get-notification-settings',
+                // Update Notification Settings
+                'POST user/notifications/update-settings' => 'user/notification/update-notification-settings',
             ],
         ],
     ],
@@ -171,8 +216,12 @@ return [
         'class' => 'filsh\yii2\oauth2server\filters\auth\CompositeAuth',
         'except' => ['site/index', 'oauth2/rest/token','user/profile/signup',
                     'shop/product/index','shop/product/category','shop/product/related',
-                    'user/profile/plan','user/profile/addons',
-                    'shop/category/index','shop/category/get-brands'],
+                    'user/profile/plan', 'user/profile/get-all-talent-users',
+                    'shop/category/index','shop/category/get-brands',
+                    'shop/product/view',
+                    'user/profile/get-public-gallery',
+                    'site/device-token',
+                ],
         'authMethods' => [
             ['class' => 'yii\filters\auth\HttpBearerAuth'],
             ['class' => 'yii\filters\auth\QueryParamAuth', 'tokenParam' => 'accessToken'],
@@ -182,8 +231,11 @@ return [
         'class' => 'yii\filters\AccessControl',
         'except' => ['site/index', 'oauth2/rest/token','user/profile/signup' ,
                     'shop/product/index','shop/product/category','shop/product/related',
-                    'user/profile/plan','user/profile/addons',
-                    'shop/category/index','shop/category/get-brands'
+                    'user/profile/plan', 'user/profile/get-all-talent-users',
+                    'shop/category/index','shop/category/get-brands',
+                    'shop/product/view',
+                    'user/profile/get-public-gallery',
+                    'site/device-token',
                     
                     ],
         'rules' => [

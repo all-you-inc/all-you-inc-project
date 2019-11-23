@@ -20,10 +20,30 @@ return [
             'assignmentTable' => '{{%auth_assignments}}',
             'ruleTable' => '{{%auth_rules}}',
         ],
+        'notification' => [
+            'class' => 'common\modules\notification\components\NotificationManager',
+            'targets' => [
+                [
+                    'class' => 'common\modules\notification\targets\WebTarget',
+                    'renderer' => ['class' => 'common\modules\notification\renderer\WebRenderer']
+                ],
+                [
+                    'class' => 'common\modules\notification\targets\MailTarget',
+                    'renderer' => ['class' => 'common\modules\notification\renderer\MailRenderer']
+                ],
+                [
+                    'class' => 'common\modules\notification\targets\MobileTarget'
+                ],
+            ]
+        ],
+        // 'queue' => [
+        //     'class' => 'yii\queue\file\Queue',
+        //     'as log' => 'yii\queue\LogBehavior',
+        //     'path' => '@runtime/queue'
+        // ],
         'queue' => [
-            'class' => 'yii\queue\file\Queue',
-            'as log' => 'yii\queue\LogBehavior',
-            'path' => '@runtime/queue'
+            'class' => 'common\modules\queue\driver\MySQL',
+            
         ],
     ],
 ];  

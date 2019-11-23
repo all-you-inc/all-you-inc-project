@@ -58,18 +58,25 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php // echo $form->field($model->delivery, 'address')->textarea(['rows' => 3]) ?>
                                 <div class="form-group field-deliveryform-address required">
                                     <label class="control-label" for="deliveryform-address">Address</label>
+                                    <?php ?>
                                     <select id="deliveryform-address" class="form-control" name="DeliveryForm[address]" required="" aria-required="true">
                                         <option value="">--- Select ---</option>
                                         <?php
                                         if ($user_addresses) {
                                             foreach ($user_addresses as $user_address) {
                                                 ?>
-                                                <option <?= $user_address->default == 1 ? 'selected' :  '' ?> value="<?= $user_address->id ?>"><?= $user_address->address ?></option>
-                                            <?php
+                                                <option <?= $user_address->default == 1 ? 'selected' : '' ?> value="<?= $user_address->id ?>"><?= $user_address->address ?></option>
+                                                <?php
                                             }
                                         }
                                         ?>
                                     </select>
+                                    <?php if (!$user_addresses) { ?>
+                                    <br>
+                                        <div class="login-signup-btn-padding">
+                                            <a href="<?= Html::encode(Url::to(['/addaddress'])) ?>" class="paction product-promote-btn login-signup-btn" title="SignUp">Add Address</a>
+                                        </div>
+                                    <?php } ?>
 
                                     <p class="help-block help-block-error"></p>
                                 </div>
@@ -79,15 +86,15 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="panel panel-default">
                             <div class="panel-heading">Note</div>
                             <div class="panel-body">
-<?= $form->field($model, 'note')->textarea(['rows' => 3])->label(false) ?>
+                                <?= $form->field($model, 'note')->textarea(['rows' => 3])->label(false) ?>
                             </div>
                         </div>
 
                         <div class="form-group">
-                        <?= Html::submitButton('Checkout', ['class' => 'btn btn-primary btn-lg btn-block']) ?>
+                            <?= Html::submitButton('Checkout', ['class' => 'btn btn-primary btn-lg btn-block']) ?>
                         </div>
 
-<?php ActiveForm::end() ?>
+                        <?php ActiveForm::end() ?>
 
                     </li>
                 </ul>
@@ -112,11 +119,11 @@ $this->params['breadcrumbs'][] = $this->title;
                                     ?>
                                     <tr>
                                         <td class="product-col">
-    <?php if ($product->mainPhoto): ?>
+                                            <?php if ($product->mainPhoto): ?>
                                                 <a href="<?= $url ?>" class="product-image-container">
                                                     <img src="<?= $product->mainPhoto->getThumbFileUrl('file', 'cart_list') ?>" alt="product" />
                                                 </a>
-    <?php endif; ?>
+                                            <?php endif; ?>
                                             <div>
                                                 <figure class="product-image-container"></figure>
                                                 <h2 class="product-title">
@@ -128,8 +135,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                         </td>
                                         <td class="price-col"> <?= $item->getCost() ?></td>
                                     </tr>
-<?php endforeach; ?>
-<?php $cost = $cart->getCost() ?>
+                                <?php endforeach; ?>
+                                <?php $cost = $cart->getCost() ?>
                                 <tr>
                                     <td class="product-col text-right">
                                         <h2 class="product-title">

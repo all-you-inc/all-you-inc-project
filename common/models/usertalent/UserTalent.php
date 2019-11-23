@@ -52,7 +52,7 @@ class UserTalent extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'industry_id', 'talent_id'], 'required'],
+            [['user_id', 'industry_id',], 'required'],
             [['user_id', 'industry_id', 'talent_id', 'dj_genre_id', 'instrument_id', 'instrument_spec_id', 'music_genre_id', 'created_at', 'created_by', 'modified_at', 'modified_by', 'is_deleted'], 'integer'],
             [['gender'], 'string'],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],

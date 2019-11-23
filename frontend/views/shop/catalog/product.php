@@ -10,6 +10,7 @@ use yii\bootstrap\ActiveForm;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use frontend\widgets\Shop\FeaturedProductsWidget;
+use common\models\userprofileimage\UserProfileImage;
 
 $this->title = $product->name;
 
@@ -29,6 +30,29 @@ $this->params['active_category'] = $product->category;
 
 MagnificPopupAsset::register($this);
 ?>
+
+<!-- For Google -->
+<meta name="description" content="<?= strip_tags($product->description) ?>" />
+<meta name="keywords" content="<?= $product->name ?>" />
+
+<meta name="author" content="<?= $product->user->name ?>" />
+<meta name="copyright" content="Siliconplex" />
+<meta name="application-name" content="All You Inc" />
+
+<!-- For Facebook -->
+<meta property="og:title" content="<?= $product->name ?>" />
+<meta property="og:type" content="article" />
+<meta property="og:image" content="<?= $product->photos[0]->getThumbFileUrl('file', 'catalog_product_main') ?>" />
+<meta property="og:url" content="<?= Url::base('https').Yii::$app->request->url ?>" />
+<meta property="og:description" content="<?= strip_tags($product->description) ?>" />
+
+<!-- For Twitter -->
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="<?= $product->name ?>" />
+<meta name="twitter:description" content="<?= strip_tags($product->description) ?>" />
+<meta name="twitter:image" content="<?= $product->photos[0]->getThumbFileUrl('file', 'catalog_product_main') ?>" />
+
+
 <nav aria-label="breadcrumb" class="breadcrumb-nav">
     <div class="container-fluid">
         <ol class="breadcrumb">
@@ -71,7 +95,13 @@ MagnificPopupAsset::register($this);
                     <div class="col-lg-5 col-md-6">
                         <div class="product-single-details">
                             <h1 class="product-title"><?= Html::encode($product->name) ?></h1>
+                            <div class="ratings-container">
+                                <div class="product-ratings">
+                                    <span class="ratings" style="width:60%"></span><!-- End .ratings -->
+                                </div><!-- End .product-ratings -->
 
+                                <a href="#" class="rating-link">( 6 Reviews )</a>
+                            </div>
                             <div class="price-box">
                                 <span class="old-price"><?= PriceHelper::format($product->price_old) ?></span>
                                 <span class="product-price"><?= PriceHelper::format($product->price_new) ?></span>
@@ -95,7 +125,7 @@ MagnificPopupAsset::register($this);
                                 </a>
                                 <?php
                                 if (!\Yii::$app->user->isGuest && \Yii::$app->user->identity->getUser()->isPromoter()) {
-                                    $shareUrl = Url::base('http') . Url::to(['/catalog/'.$product->id.'?referral='. \Yii::$app->user->identity->getUser()->referral_code]);
+                                    $shareUrl = Url::base('http') . Url::to(['/catalog/' . $product->id . '?referral=' . \Yii::$app->user->identity->getUser()->referral_code]);
                                     ?>
                                     <a onclick="prompt('To Promote Press Ctrl + C, then Enter to copy to clipboard', '<?php echo $shareUrl ?>')"
                                        class="paction product-promote-btn" title="Promote">
@@ -255,36 +285,55 @@ MagnificPopupAsset::register($this);
         <aside class="sidebar-product col-lg-3 padding-left-lg mobile-sidebar">
             <div class="sidebar-wrapper">
                 <div class="widget widget-brand">
-                    <a href="#">
-                        <img src="<?= Yii::getAlias('@web/images/product-brand.png') ?>" alt="brand name">
-                    </a>
+                    <h2 class="about-talent">About the talent</h2>
+                    <div>
+                        <button class="btn contact-me-btn">CONTACT ME</button>
+                        <button class="btn fan-btn">BE MY FAN</button>                        
+                    </div>
                 </div><!-- End .widget -->
 
                 <div class="widget widget-info">
-                    <ul>
-                        <li>
-                            <i class="icon-shipping"></i>
-                            <h4>FREE<br>SHIPPING</h4>
-                        </li>
-                        <li>
-                            <i class="icon-us-dollar"></i>
-                            <h4>100% MONEY<br>BACK GUARANTEE</h4>
-                        </li>
-                        <li>
-                            <i class="icon-online-support"></i>
-                            <h4>ONLINE<br>SUPPORT 24/7</h4>
-                        </li>
-                    </ul>
-                </div><!-- End .widget -->
+                    <div class="collab-div">
+                        <strong> Collab Points: &nbsp;</strong>
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                  
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                  
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                    </div>
+                    <div class="collab-div">
+                        <strong> Fans: 6458 </strong> 
+                    </div>
+                    <div class="collab-div">
+                        <strong> Fan Rating: &nbsp;</strong> 
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                  
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                  
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                        <img class="collab-star" src="<?= Yii::getAlias('@web/images/logo2.png') ?>" alt="Collab Point">                                          
+                    </div>
+                </div>
+                <!-- End .widget -->
 
-                <div class="widget widget-banner">
-                    <div class="banner banner-image">
-                        <a href="#">
-                            <img src="" alt="brand name">
-                            <img src="<?= Yii::getAlias('@web/images/banners/banner-sidebar.jpg') ?>" alt="Banner Desc">
-                        </a>
-                    </div><!-- End .banner -->
-                </div><!-- End .widget -->
+                <div class="sidemenu-intro">
+                    <div class="container-custom-upload">
+                        <?php $image = UserProfileImage::getProfileImage($product->user->id) ?>
+                        <img src="<?= ($image == null) ? Yii::getAlias('@web/images/spotlight/profile-1.png') : $image ?>" alt="profile-image" class="sidemenu-profile-img"/>    
+                    </div>
+                    <span class="sidemenu-profile-name"><?= $product->user->name ?></span>
+                    <span class="sidemenu-profile-country"><?= $product->user->country ?></span>
+                </div>
+                <!-- End .widget -->
             </div>
         </aside><!-- End .col-md-3 -->
     </div><!-- End .row -->

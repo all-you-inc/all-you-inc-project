@@ -96,53 +96,189 @@
   .button-credit-card:hover {
     background-color: #4281CB;
   }
+
+  /* The container */
+.label-container {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Hide the browser's default checkbox */
+.label-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* Create a custom checkbox */
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: #eee;
+}
+
+/* On mouse-over, add a grey background color */
+.label-container:hover input ~ .checkmark {
+    background-color: #ccc;
+}
+
+/* When the checkbox is checked, add a blue background */
+.label-container input:checked ~ .checkmark {
+    background-color: #2196F3;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+/* Show the checkmark when checked */
+.label-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+/* Style the checkmark/indicator */
+.label-container .checkmark:after {
+    left: 9px;
+    top: 5px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+.alignleftpay {
+	float: left;
+}
+.alignrightpay {
+	float: right;
+}
+
+.label-width {
+    width: 100%;
+}
     </style>
 
 </head>
 <body>
  
     <div id="payment_div" class="container" style="margin-top:30px;">
-        
         <div class="row">
-            <div id="show_errors" class="col-md-12">
-            </div>
-            <?php if($cards != null){ ?>
+            <?php  if($response['request'] == 'membership' ){ ?>
                 <div class="col-md-12">
-                    <ul class="list-group">
-                        <li class="list-group-item"><h2>Your Cards</h2></li>
-                        <?php for($i=0;$i<count($cards);$i++){ ?>
-                            <li class="list-group-item"><label><input type="radio" name="optradio" value="<?= $cards[$i]['sourceId'] ?>" /> <?= 'Card Brand : ' . $cards[$i]['cardBrand'] . ', Last 4 Number : ' . $cards[$i]['last4Digit'] ?></label></li>
-                        <?php } ?>
-                        <li class="list-group-item"><button class="btn btn-info btn-large" onclick="selectCardIdAlert()">Select This Card</button></li>
-                    </ul>
+                    <h3><strong>FREE 2 MONTHS UPGRADED BILLING NOTICE </strong></h3><br />
+                    FOR YOUR SUPPORT ALL YOU IS GIVING YOU 2 FREE MONTHS OF UPGRADED MEMBERSHIP.
+                    WE HOPE YOU ENJOY ALL OF THE PERKS THE UPGRADED PROVIDES.THERE IS NOT COMMITMENT 
+                    AND CANCEL ANYTIME.IF YOU CHOOSE TO GO WITH THE FREE MEMBERSHIP YOU MUST CANCEL
+                    BEFORE 60 DAYS NOT TO BE   CHARGED. FOR THIS UPGRADED BENEFIT YOU WILL HAVE TO
+                    ENTER YOUR DEBIT/CREDIT CARD DURING YOUR SIGNUP PROCESS.YOUR CARD ON FILE IS
+                    PROTECTED BY SQAURE’S TOP SECURITY PROTECTIONARY TECHNOLOGY AND ONLY FOR YOUR
+                    USE TO PAY FOR GOODS, SERVICES AND YOUR UPGRADED FEATURES IF YOU CHOOSE TO
+                    CONTINUE ON THEM.<br />
+                    THANKYOU FOR YOUR SUPPORT<br /><br />
                 </div>
             <?php } ?>
-            <div class="col-md-12">
-                <div class="panel panel-default">
-                    <div class="panel-heading"><h3><i class="fa fa-credit-card"></i>Add Card</h3></div>
-                    <div class="panel-body">
-                        <div id="form-container">
-                            <fieldset>
-                                <span style="color:black;" class="label">CARD NUMBER</span>
-                                <div id="sq-card-number"></div>
+        </div>
+        <div class="row">
+            <div class="panel panel-default">
+                <div class="panel-heading"><h3><i class="fa fa-credit-card"></i>Cards</h3></div>
+                <div class="panel-body">
+                    <div id="show_errors" class="col-md-12">
+                    </div>
+                    <?php if($cards != null){ ?>
+                        <div class="col-md-12">
+                            
+                            <?php for($i=0;$i<count($cards);$i++){ ?>
+                                <?php $check = ( $activeCard == $cards[$i]['sourceId']) ? 'checked' : ''; ?>
+                                <div class="radio"> 
+                                    <div class="panel <?= $check == 'checked' ? 'panel-success' :'panel-default' ?>">
+                                        <div class="panel-heading" style="padding-bottom: -10px;padding-top: 5px;">
+                                            <label class="label-width">
+                                                <input type="radio" name="optradio" value="<?= $cards[$i]['sourceId'] ?>" <?= $check ?>>
+                                                <div id="textbox">
+                                                    <h3 class="alignleftpay"> **** **** **** <?= $cards[$i]['last4Digit'] ?> </h3>
+                                                    <h3 class="alignrightpay"> <img style="width:40px;" src="<?= $cards[$i]['imageLink'] ?>" /></h3>
+                                                    <div style="clear: both;"></div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div> 
+                                </div>
+                            <?php } ?>
+                        </div>
+                    <?php } ?>
+                    <div class="col-md-12">
 
-                                <div class="two-col">
-                                    <span style="color:black;" class="label">EXPIRATION</span>
-                                    <div id="sq-expiration-date"></div>
+                                
+                        <div class="radio"> 
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <label class="label-width">
+                                        <input type="radio" id="card-details-toggle-btn" value="new_card" name="optradio">
+                                        <div id="textbox">
+                                            <h3 class="alignleftpay"> ADD CARD </h3>
+                                            <div style="clear: both;"></div>
+                                        </div>
+                                    </label>
                                 </div>
-                                
-                                <div class="two-col">
-                                    <span style="color:black;" class="label">CVV</span>
-                                    <div id="sq-cvv"></div>
+                                <div id="card-details-toggle" class="panel-body" style="display: none;">
+                                    <div id="form-container">
+                                        <fieldset>
+                                            <span style="color:black;" class="label">CARD NUMBER</span>
+                                            <div id="sq-card-number"></div>
+
+                                            <div class="two-col">
+                                                <span style="color:black;" class="label">EXPIRATION</span>
+                                                <div id="sq-expiration-date"></div>
+                                            </div>
+                                            
+                                            <div class="two-col">
+                                                <span style="color:black;" class="label">CVV</span>
+                                                <div id="sq-cvv"></div>
+                                            </div>
+                                            
+                                            
+                                            <span style="color:black;" class="label">POSTAL CODE</span>
+                                            <div id="sq-postal-code"></div>
+                                            
+                                            
+                                        </fieldset>
+                                    </div> <!-- end #form-container --> 
+                                    
                                 </div>
-                                
-                                
-                                <span style="color:black;" class="label">POSTAL CODE</span>
-                                <div id="sq-postal-code"></div>
-                                
-                                <button id="sq-creditcard" class="button-credit-card" onclick="onGetCardNonce(event)">INSERT CARD DETAIL</button>
-                            </fieldset>
-                        </div> <!-- end #form-container --> 
+                            </div>
+                        </div>
+                        <?php  if($response['request'] == 'membership' ){ ?>
+                        <label class="label-container" id="lagree">
+                            <input type="checkbox" id="agree" name="agree"> Talent Membership Agreement Acknowledgement
+                            <span class="checkmark"></span>
+                        </label>
+                        <br />
+                        <?php } ?>
+                        <label class="label-container" id="lterms">
+                            <input type="checkbox" id="terms" name="terms"> TERMS AND USE
+                            <span class="checkmark"></span>
+                        </label>
+                        <br />
+
+                        <button id="sq-creditcard" class="button-credit-card" onclick="onGetCardNonce(event)">CONFIRM AND PAY</button>
                     </div>
                 </div>
             </div>
@@ -220,20 +356,59 @@
         // onGetCardNonce is triggered when the "Pay $1.00" button is clicked
         function onGetCardNonce(event) {
 
-            // Don't submit the form until SqPaymentForm returns with a nonce
-            event.preventDefault();
-            // Request a nonce from the SqPaymentForm object
-            paymentForm.requestCardNonce();
+            
+            <?php if($response['request'] == 'membership'){ ?>
+                if($("#agree").prop('checked') == true && $("#terms").prop('checked') == true){
+                        $('#lagree').css('color', '');
+            <?php }else{ ?>
+                if($("#terms").prop('checked') == true){
+                <?php } ?>
+                $('#lterms').css('color', '');
+
+                if($('input:radio[name=optradio]:checked').val() == "new_card"){
+                     // Don't submit the form until SqPaymentForm returns with a nonce
+                    event.preventDefault();
+                    // Request a nonce from the SqPaymentForm object
+                    paymentForm.requestCardNonce();
+                }else{
+                    selectCardIdAlert();
+                }
+
+            }
+            else
+            {
+                if($("#agree").prop('checked') == false){
+                    $('#lagree').css('color', 'red');
+                }else{
+                    $('#lagree').css('color', '');
+                }
+                if($("#terms").prop('checked') == false){
+                    $('#lterms').css('color', 'red');  
+                }else{
+                    $('#lterms').css('color', '');
+                }
+                
+            }
         }
         paymentForm.build();
 
 
         function selectCardIdAlert(){
             var responseObject = {  type:2,
-                                    value:$("input[name=optradio]:checked").val()
-                                 };
+                                value:$("input[name=optradio]:checked").val()
+                                };
             window.postMessage(JSON.stringify(responseObject),"*");
         }
+
+        $(document).ready(function(){
+            $("input:radio[name=optradio]").click(function(){
+                if($('input:radio[name=optradio]:checked').val() == "new_card"){
+                    $("#card-details-toggle").show();
+                }else{
+                    $("#card-details-toggle").hide();
+                }
+            });
+        });
 
     </script>
     <!-- Latest compiled and minified JavaScript -->

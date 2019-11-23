@@ -10,6 +10,7 @@ use common\models\usersubscription\UserSubscription;
 use common\models\membership\MsItems;
 use common\models\usertalent\UserTalent;
 use shop\entities\Shop\Product\Product;
+use common\models\userprofileimage\UserProfileImage;
 
 class UserAccessService {
 
@@ -41,30 +42,23 @@ class UserAccessService {
 
     public static function checkLimitByMsItem($user_id, $items, $key) {
 
-        switch ($key) {
-            case 'TALENT':
-                $count = UserTalent::find()->where(['user_id' => $user_id])->count();
-                $items_unit = 0;
-                foreach($items as $item){
-                    $items_unit += $item->unit;
-                }
-                if ($items_unit > $count) {
-                    return TRUE;
-                }
-                return FALSE;
-            case 'PRODUCTS':
-                $count = Product::find()->where(['created_by' => $user_id])->count();
-                $items_unit = 0;
-                foreach($items as $item){
-                    $items_unit += $item->unit;
-                }
-                if ($items_unit > $count) {
-                    return TRUE;
-                }
-                return FALSE;
-            default:
-                return FALSE;
+        if ($key == 'TALENT') {
+            $count = UserTalent::find()->where(['user_id' => $user_id])->count();
+        } elseif ($key == 'PRODUCTS') {
+            $count = Product::find()->where(['created_by' => $user_id])->count();
+        } elseif ($key == 'PHOTOS') {
+            $count = UserProfileImage::find()->where(['user_id' => $user_id, 'show_on' => 'image-gallery'])->count();
+        } elseif ($key == 'VIDEOS') {
+            $count = UserProfileImage::find()->where(['user_id' => $user_id, 'show_on' => 'video-gallery'])->count();
         }
+        $items_unit = 0;
+        foreach ($items as $item) {
+            $items_unit += $item->unit;
+        }
+        if ($items_unit > $count) {
+            return TRUE;
+        }
+        return FALSE;
     }
 
 }

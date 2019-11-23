@@ -41,11 +41,27 @@ $this->params['breadcrumbs'][] = $this->title;
                 <label>State </label>
                 <input type="text" value="<?= isset($model->state) ? $model->state : '' ?>" name="state" class="form-control">
             </div>
-            <div class="form-group">
+<!--            <div class="form-group">
                 <label>Country </label>
                 <input type="text" value="<?= isset($model->country) ? $model->country : '' ?>" name="country" class="form-control">
-            </div>
-
+            </div>-->
+<div class="form-group required-field">
+    <label>Country </label>
+    <div class="select-custom">
+        <select class="form-control" required="" name="country">
+            <option value="">Please Select Any Country</option>
+            <?php
+            if ($countries) {
+                foreach ($countries as $country) {
+                    ?>
+                    <option <?= isset($model->country) && $model->country == $country->id ? 'selected' : '' ?> value="<?= $country->id ?>"><?= $country->title ?></option>
+                    <?php
+                }
+            }
+            ?>
+        </select>
+    </div>
+</div>
             <div class="form-footer">
                 <?= Html::submitButton('Update', ['class' => 'btn btn-primary', 'name' => 'signup-button']) ?>
             </div> 

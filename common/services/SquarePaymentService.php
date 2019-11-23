@@ -15,6 +15,7 @@ use SquareConnect\Model\CreateCustomerRequest;
 use SquareConnect\Model\UpdateCustomerRequest;
 use SquareConnect\Model\SearchCustomersRequest;
 use SquareConnect\Model\CreateCustomerCardRequest;
+use shop\entities\User\User;
 
 class SquarePaymentService
 {
@@ -77,9 +78,71 @@ class SquarePaymentService
     }
 
     
-    public function payment(int $chargesAmount, string $currencyType ='USD')
+    public function payment(int $chargesAmount,array $params = [], string $currencyType ='USD')
     {
-        $user = \Yii::$app->user->identity->getUser();
+        $user = User::find()
+                    ->where(['id' => \Yii::$app->user->identity->getUser()->id])
+                    ->one();
+        // $user = \Yii::$app->user->identity->getUser();
+        $nonce_id = $user->getActiveCard();
+        $cust_id = $user->square_cust_id;
+
+        if($nonce_id == null) {
+            return "No Active Card Found For Payment";
+        }
+
+        $apiClient = $this->Configuration();
+        $paymentApi = new PaymentsApi($apiClient);
+        $locationId = $this->sandBox === false ? $this->locationId : $this->sandBoxLocationId;
+
+        $paymentModel = new CreatePaymentRequest();
+        $amountMoney = new Money();
+
+        // Monetary amounts are specified in the smallest unit of the applicable currency.
+        // This amount is in cents. It's also hard-coded for $1.00, which isn't very useful.
+
+        $amountMoney->setAmount($chargesAmount);
+        $amountMoney->setCurrency($currencyType);
+
+        $paymentModel->setSourceId($nonce_id);
+        $paymentModel->setAmountMoney($amountMoney);
+        $paymentModel->setLocationId($locationId);
+        $paymentModel->setCustomerId($cust_id);
+
+        if($params !== null){
+            if(array_key_exists('note',$params)){
+                $paymentModel->setNote($params['note'] . ' By ' . \Yii::$app->user->identity->getUser()->name . ' & ID #' . \Yii::$app->user->id);
+            }
+            if(array_key_exists('reference_id',$params)){
+                $paymentModel->setReferenceId($params['reference_id']);
+            } 
+        }
+
+        //  Every payment you process with the SDK must have a unique idempotency key.
+        //  If you're unsure whether a particular payment succeeded, you can reattempt
+        //  it with the same idempotency key without worrying about double charging
+        //  the buyer.
+
+        $paymentModel->setIdempotencyKey(uniqid());
+
+        try {
+            $result = $paymentApi->createPayment($paymentModel);
+            return $result;
+        } catch (\SquareConnect\ApiException $e) {
+            $showError = '';
+            if(is_array($e->getResponseBody()->errors)){
+                foreach($e->getResponseBody()->errors as $error){
+                    $showError .= $error->detail;
+                }
+                throw new \yii\web\HttpException(404,$showError);
+            }
+            throw new \yii\web\HttpException(404,$e->getResponseBody()->errors);
+        }
+    }
+
+    public function consolePayment(int $chargesAmount,$user, string $currencyType ='USD')
+    {
+        $user = $user;
         $nonce_id = $user->getActiveCard();
         $cust_id = $user->square_cust_id;
 
@@ -116,14 +179,7 @@ class SquarePaymentService
             $result = $paymentApi->createPayment($paymentModel);
             return $result;
         } catch (\SquareConnect\ApiException $e) {
-            $showError = '';
-            if(is_array($e->getResponseBody()->errors)){
-                foreach($e->getResponseBody()->errors as $error){
-                    $showError .= $error->detail;
-                }
-                throw new \yii\web\HttpException(404,$showError);
-            }
-            throw new \yii\web\HttpException(404,$e->getResponseBody()->errors);
+            return false;
         }
     }
 

@@ -11,8 +11,17 @@ use common\models\promo\Promo;
 
 class UserReferralService {
 
+    const Tier2 = 2;
+    const Tier3 = 3;
+    const Tier4 = 4;
+    const Tier5 = 5;
+    const Tier2Limit = 500; //up to 500
+    const Tier3Limit = 250; //up to 250
+    const Tier4Limit = 100; //up to 100
+    const Tier5Limit = 50; //up to 50
+
     public static function createUserReferral($user_id, $referral_id, $referral_code, $tier, $time) {
-//        d('in');
+        if (self::checkUserReferralTierCount($referral_id, $tier)) {
             $params = [];
             $params['user_id'] = $user_id;
             $params['referral_user_id'] = $referral_id;
@@ -24,12 +33,25 @@ class UserReferralService {
             $params['modified_by'] = $user_id;
             $model = new UserReferral();
             $model->attributes = $params;
-            self::checkAndUpdateReferralTierPayoutId($referral_id);
             if ($model->save()) {
-//                d($model->arributes);
+                self::checkAndUpdateReferralTierPayoutId($referral_id);
                 return $model;
             }
+        }
         return FALSE;
+    }
+
+    public static function checkUserReferralTierCount($referral_id, $tier) {
+        $count = UserReferral::find()->where(['referral_user_id' => $referral_id, 'tier' => $tier])->count();
+        if ($tier = self::Tier2 && $count > self::Tier2Limit)
+            return FALSE;
+        elseif ($tier = self::Tier3 && $count > self::Tier3Limit)
+            return FALSE;
+        elseif ($tier = self::Tier4 && $count > self::Tier4Limit)
+            return FALSE;
+        elseif ($tier = self::Tier5 && $count > self::Tier5Limit)
+            return FALSE;
+        return TRUE;
     }
 
     public static function checkAndUpdateReferralTierPayoutId($referral_id) {
@@ -38,7 +60,7 @@ class UserReferralService {
         $tier_id = 0;
         foreach ($tiers as $tier) {
             $team = explode("-", $tier->team);
-            if (($team[0] >= $count) && ($count <= $team[1])) {
+            if (($team[0] <= $count) && ($count <= $team[1])) {
                 $tier_id = $tier->id;
                 break;
             }
@@ -59,7 +81,6 @@ class UserReferralService {
             'type' => 'product',
         ];
         self::checkAndCreatePromoFromSession();
-//        dd($session['referral']);
     }
 
     public static function checkAndCreatePromoFromSession() {
@@ -90,11 +111,9 @@ class UserReferralService {
 
     public static function checkAndCreateReferralFromSession() {
         $session = Yii::$app->session;
-//        d('in');
         if ($session['referral'] && !Yii::$app->user->isGuest) {
             $is_exist = self::getUserReferralByUserId(Yii::$app->user->id);
             if (!$is_exist) {
-//                dd($session['referral']);
                 $referral = self::getUserByReferralCode($session['referral']['code']);
                 self::createAllTierReferrals(Yii::$app->user->id, $referral->id, $session['referral']['code']);
                 $session->remove('referral');
@@ -106,19 +125,19 @@ class UserReferralService {
 
     public static function createAllTierReferrals($user_id, $referral_user_id, $ref_code) {
 //For tier 2
-        self::createUserReferral($user_id, $referral_user_id, $ref_code, 2, time());
+        self::createUserReferral($user_id, $referral_user_id, $ref_code, self::Tier2, time());
         $referral_2 = UserReferral::find()->where(['user_id' => $referral_user_id])->one();
         if ($referral_2) {
 //For tier 3
-            self::createUserReferral($user_id, $referral_2->referral_user_id, $ref_code, 3, time());
+            self::createUserReferral($user_id, $referral_2->referral_user_id, $ref_code, self::Tier3, time());
             $referral_3 = UserReferral::find()->where(['user_id' => $referral_2->referral_user_id])->one();
             if ($referral_3) {
 //For tier 4
-                self::createUserReferral($user_id, $referral_3->referral_user_id, $ref_code, 4, time());
+                self::createUserReferral($user_id, $referral_3->referral_user_id, $ref_code, self::Tier4, time());
                 $referral_4 = UserReferral::find()->where(['user_id' => $referral_3->referral_user_id])->one();
                 if ($referral_4) {
 //For tier 5
-                    self::createUserReferral($user_id, $referral_4->referral_user_id, $ref_code, 5, time());
+                    self::createUserReferral($user_id, $referral_4->referral_user_id, $ref_code, self::Tier5, time());
                 }
             }
         }

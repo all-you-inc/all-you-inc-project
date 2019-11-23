@@ -131,12 +131,12 @@ class Order extends ActiveRecord
         return $this->current_status == Status::CANCELLED;
     }
 
-    public function getSalesCost()
+    public function getSalesCost($talentId = null)
     {
         $SalesCost = 0;
         foreach($this->items as $item)
         {
-            if( $item->product->created_by == \Yii::$app->user->id )
+            if( $item->product->created_by == \Yii::$app->user->id && ($talentId == null || $item->product->talent_id == $talentId))
             {
                 $SalesCost += $item->price * $item->quantity;
             }
@@ -167,7 +167,12 @@ class Order extends ActiveRecord
         return $this->hasMany(OrderItem::class, ['order_id' => 'id']);
     }
    
-    public function getUseraddress(): ActiveQuery
+    public function getUserAddress(): ActiveQuery
+    {
+        return $this->hasOne(UserAddress::class, ['id' => 'delivery_address']);
+    }
+    
+    public function getDeliveryAddress()
     {
         return $this->hasOne(UserAddress::class, ['id' => 'delivery_address']);
     }

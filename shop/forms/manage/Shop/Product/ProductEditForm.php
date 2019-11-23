@@ -8,6 +8,7 @@ use shop\entities\Shop\Product\Product;
 use shop\forms\CompositeForm;
 use shop\forms\manage\MetaForm;
 use yii\helpers\ArrayHelper;
+use yii\db\Query;
 
 /**
  * @property MetaForm $meta
@@ -18,6 +19,7 @@ use yii\helpers\ArrayHelper;
 class ProductEditForm extends CompositeForm
 {
     public $brandId;
+    public $talent_id;
     public $code;
     public $name;
     public $description;
@@ -40,8 +42,12 @@ class ProductEditForm extends CompositeForm
     public function rules(): array
     {
         return [
-            [['brandId', 'code', 'name', 'weight'], 'required'],
-            [['brandId'], 'integer'],
+            ($this->setupModel == self::FRONTEND_SETUP 
+            || $this->setupModel == self::API_SETUP ?
+            [['talent_id','code', 'name', 'weight'], 'required'] :
+            [['code', 'name', 'weight'], 'required']),
+
+            [['brandId','talent_id'], 'integer'],
             [['code', 'name'], 'string', 'max' => 255],
             [['code'], 'unique', 'targetClass' => Product::class, 'filter' => $this->_product ? ['<>', 'id', $this->_product->id] : null],
             ['description', 'string'],
@@ -52,6 +58,19 @@ class ProductEditForm extends CompositeForm
     public function brandsList(): array
     {
         return ArrayHelper::map(Brand::find()->orderBy('name')->asArray()->all(), 'id', 'name');
+    }
+
+    public function talentList(): array
+    {
+        $query = new Query;
+        $query->select(['user_talent.id','talent_master.name'])  
+        ->from('user_talent')
+        ->join(	'INNER JOIN','talent_master','talent_master.id = user_talent.talent_id')
+        ->where(['user_id' => \Yii::$app->user->id]);
+
+        $command = $query->createCommand();
+        $data = $command->queryAll();
+        return ArrayHelper::map($data, 'id', 'name');
     }
 
     protected function internalForms(): array

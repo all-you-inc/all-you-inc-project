@@ -5,11 +5,14 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use common\models\userprofileimage\UserProfileImage;
 
-$spotlight = UserTalent::find()->limit(4)->orderBy('id DESC')->all();
+$spotlight = UserTalent::find()->limit(4)->orderBy('id ASC')->all();
 ?>
 <div class="container-fluid spotlight-main">
-    <center>
-        <img src="<?= Yii::getAlias('@web/images/spotlight.jpg') ?>" alt="spotlight">
+   
+        <div class="container spotlight-header">
+        <img src="<?= Yii::getAlias('@web/images/spotlight.png') ?>" alt="spotlight" class="align-center">
+        
+        </div>
         <div class="container">
             <?php
             if ($spotlight) {
@@ -21,16 +24,21 @@ $spotlight = UserTalent::find()->limit(4)->orderBy('id DESC')->all();
                             <div class="card profile-card-3">
                                 <div class="background-block">
                                     <?php $imageprofile = UserProfileImage::getProfileImage($item->user->id); ?>
-                                    <?php $imageBanner = UserProfileImage::getBannerImage($item->user->id); ?>
-                                    <img src="<?= $imageBanner == NULL ? Yii::getAlias('@web/images/spotlight/banner.jpg') : $imageBanner  ?>" alt="profile" class="background"/>
-                                    <img src="<?=  $imageprofile == NULL ? Yii::getAlias('@web/images/spotlight/profile-1.png') : $imageprofile  ?>" alt="profile-image" class="sidemenu-profile-img"/>
+                                    <img src="<?=  $imageprofile == NULL ? 
+                                    Yii::getAlias('@web/images/spotlight/profile-1.png') : 
+                                    $imageprofile  ?>" 
+                                    alt="profile-image" 
+                                    class="spotlight-profile-img"/>
                                 </div>
                                 <div class="card-content">
                                     <h2><?= $item->user->name ?></h2>
-                                    <h3 class="fan">Fans: 1.99M</h3>
+                                    <h4 ><?=( $item->talent->name);?></h4>
+                                    <h3 class="fan">Fans: 0</h3>
+                                    <?php if(isset($item->user->userCountry->title)): ?>
                                     <div>
-                                        <h4>From: <?= $item->user->country ?></h4>
+                                        <h4>From: <?= $item->user->userCountry->title ?></h4>
                                     </div>
+                                    <?php endif; ?>    
                                 </div>
 
                             </div>
@@ -41,5 +49,5 @@ $spotlight = UserTalent::find()->limit(4)->orderBy('id DESC')->all();
             }
             ?>
         </div>
-    </center>
+   
 </div><!-- End .container-fluid -->

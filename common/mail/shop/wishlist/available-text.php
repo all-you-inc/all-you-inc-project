@@ -6,7 +6,7 @@
 
 $link = Yii::$app->get('frontendUrlManager')->createAbsoluteUrl(['shop/catalog/product', 'id' => $product->id]);
 ?>
-Hello <?= $user->username ?>,
+Hello <?= $user->name ?>,
 
 Product from your wishlist is available right now:
 

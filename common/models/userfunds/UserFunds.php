@@ -23,6 +23,8 @@ use Yii;
  * @property integer $is_deleted
  *
  * @property User $user
+ * @property User $creater
+ * @property User $modifier
  */
 class UserFunds extends \yii\db\ActiveRecord {
 
@@ -38,12 +40,14 @@ class UserFunds extends \yii\db\ActiveRecord {
      */
     public function rules() {
         return [
-            [['user_id', 'referral_code', 'transaction_id'], 'required'],
+            [['user_id', 'transaction_id'], 'required'],
             [['user_id', 'ref_id', 'created_at', 'created_by', 'modified_at', 'modified_by', 'is_deleted'], 'integer'],
             [['type'], 'string'],
             [['referral_code', 'transaction_id'], 'string', 'max' => 32],
             [['amount'], 'number'],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
+            [['created_by'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
+            [['modified_by'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
         ];
     }
 
@@ -72,6 +76,20 @@ class UserFunds extends \yii\db\ActiveRecord {
      */
     public function getUser() {
         return $this->hasOne(User::className(), ['id' => 'user_id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getCreater() {
+        return $this->hasOne(User::className(), ['id' => 'created_by']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getModifier() {
+        return $this->hasOne(User::className(), ['id' => 'modified_by']);
     }
 
 }

@@ -8,7 +8,7 @@ use yii\helpers\Html;
 $link = Yii::$app->get('frontendUrlManager')->createAbsoluteUrl(['shop/catalog/product', 'id' => $product->id]);
 ?>
 <div class="password-reset">
-    <p>Hello <?= Html::encode($user->username) ?>,</p>
+    <p>Hello <?= Html::encode($user->name) ?>,</p>
 
     <p>Product from your wishlist is available right now:</p>
 

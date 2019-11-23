@@ -2,6 +2,8 @@
 
 namespace shop\entities\Shop\Product;
 
+use common\models\usertalent\UserTalent;
+use shop\entities\User\User;
 use shop\entities\EventTrait;
 use lhs\Yii2SaveRelationsBehavior\SaveRelationsBehavior;
 use shop\entities\AggregateRoot;
@@ -33,6 +35,8 @@ use yii\web\UploadedFile;
  * @property integer $status
  * @property integer $weight
  * @property integer $quantity
+ * @property integer $created_by
+ * @property integer $is_locked
  *
  * @property Meta $meta
  * @property Brand $brand
@@ -47,6 +51,8 @@ use yii\web\UploadedFile;
  * @property Photo[] $photos
  * @property Photo $mainPhoto
  * @property Review[] $reviews
+ * @property UserTalent $userTalent
+ * @property User $user
  */
 class Product extends ActiveRecord implements AggregateRoot
 {
@@ -57,16 +63,19 @@ class Product extends ActiveRecord implements AggregateRoot
 
     public $meta;
 
-    public static function create($brandId, $categoryId, $code, $name, $description, $weight, $quantity, Meta $meta): self
+    public static function create($brandId, $categoryId, $code, $name, $description, $weight, $quantity, $talent_id = null, Meta $meta): self
     {
         $product = new static();
-        $product->brand_id = $brandId;
+        if($brandId != NULL){
+            $product->brand_id = $brandId;
+        }
         $product->category_id = $categoryId;
         $product->code = $code;
         $product->name = $name;
         $product->description = $description;
         $product->weight = $weight;
         $product->quantity = $quantity;
+        $product->talent_id = $talent_id;
         $product->meta = $meta;
         $product->status = self::STATUS_DRAFT;
         $product->created_at = time();
@@ -88,9 +97,12 @@ class Product extends ActiveRecord implements AggregateRoot
         $this->setQuantity($quantity);
     }
 
-    public function edit($brandId, $code, $name, $description, $weight, Meta $meta): void
+    public function edit($brandId, $code, $name, $description, $weight, $talent_id = null, Meta $meta): void
     {
-        $this->brand_id = $brandId;
+        if($brandId != NULL){
+            $this->brand_id = $brandId;
+        }
+        $this->talent_id = $talent_id;
         $this->code = $code;
         $this->name = $name;
         $this->description = $description;
@@ -202,7 +214,7 @@ class Product extends ActiveRecord implements AggregateRoot
     {
         $values = $this->values;
         foreach ($values as $val) {
-            if ($val->isForCharacteristic($id,$value)) {
+            if ($val->isForCharacteristic($id,$val)) {
                 return $val;
             }
         }
@@ -343,7 +355,7 @@ class Product extends ActiveRecord implements AggregateRoot
 
     // Photos
 
-    public function addPhoto(UploadedFile $file): void
+    public function addPhoto($file): void
     {
         $photos = $this->photos;
         $photos[] = Photo::create($file);
@@ -555,6 +567,16 @@ class Product extends ActiveRecord implements AggregateRoot
         return $this->hasMany(Photo::class, ['product_id' => 'id'])->orderBy('sort');
     }
 
+    public function getUserTalent(): ActiveQuery
+    {
+        return $this->hasOne(UserTalent::class, ['id' => 'talent_id']);
+    }
+
+    public function getUser(): ActiveQuery
+    {
+        return $this->hasOne(User::class, ['id' => 'created_by']);
+    }
+
     public function getMainPhoto(): ActiveQuery
     {
         return $this->hasOne(Photo::class, ['id' => 'main_photo_id']);
@@ -618,7 +640,9 @@ class Product extends ActiveRecord implements AggregateRoot
 
     public function afterSave($insert, $changedAttributes): void
     {
+       
         $related = $this->getRelatedRecords();
+        // dd($related);
         parent::afterSave($insert, $changedAttributes);
         if (array_key_exists('mainPhoto', $related)) {
             $this->updateAttributes(['main_photo_id' => $related['mainPhoto'] ? $related['mainPhoto']->id : null]);

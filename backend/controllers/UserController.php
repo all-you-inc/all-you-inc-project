@@ -11,16 +11,16 @@ use backend\forms\UserSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use common\services\UserMlmService;
 
 /**
  * UserController implements the CRUD actions for User model.
  */
-class UserController extends Controller
-{
+class UserController extends Controller {
+
     private $service;
 
-    public function __construct($id, $module, UserManageService $service, $config = [])
-    {
+    public function __construct($id, $module, UserManageService $service, $config = []) {
         parent::__construct($id, $module, $config);
         $this->service = $service;
     }
@@ -28,8 +28,7 @@ class UserController extends Controller
     /**
      * @inheritdoc
      */
-    public function behaviors()
-    {
+    public function behaviors() {
         return [
             'verbs' => [
                 'class' => VerbFilter::className(),
@@ -40,18 +39,24 @@ class UserController extends Controller
         ];
     }
 
+    public function actionWallet() {
+        $userFunds = UserMlmService::getCompanyFunds();
+        return $this->render('wallet', [
+                    'funds' => $userFunds,
+        ]);
+    }
+
     /**
      * Lists all User models.
      * @return mixed
      */
-    public function actionIndex()
-    {
+    public function actionIndex() {
         $searchModel = new UserSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
         ]);
     }
 
@@ -60,10 +65,9 @@ class UserController extends Controller
      * @param integer $id
      * @return mixed
      */
-    public function actionView($id)
-    {
+    public function actionView($id) {
         return $this->render('view', [
-            'model' => $this->findModel($id),
+                    'model' => $this->findModel($id),
         ]);
     }
 
@@ -72,8 +76,7 @@ class UserController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
-    public function actionCreate()
-    {
+    public function actionCreate() {
         $form = new UserCreateForm();
         if ($form->load(Yii::$app->request->post()) && $form->validate()) {
             try {
@@ -85,7 +88,7 @@ class UserController extends Controller
             }
         }
         return $this->render('create', [
-            'model' => $form,
+                    'model' => $form,
         ]);
     }
 
@@ -95,8 +98,7 @@ class UserController extends Controller
      * @param integer $id
      * @return mixed
      */
-    public function actionUpdate($id)
-    {
+    public function actionUpdate($id) {
         $user = $this->findModel($id);
 
         $form = new UserEditForm($user);
@@ -110,8 +112,8 @@ class UserController extends Controller
             }
         }
         return $this->render('update', [
-            'model' => $form,
-            'user' => $user,
+                    'model' => $form,
+                    'user' => $user,
         ]);
     }
 
@@ -121,8 +123,7 @@ class UserController extends Controller
      * @param integer $id
      * @return mixed
      */
-    public function actionDelete($id)
-    {
+    public function actionDelete($id) {
         $this->service->remove($id);
         return $this->redirect(['index']);
     }
@@ -134,12 +135,12 @@ class UserController extends Controller
      * @return User the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
-    protected function findModel($id)
-    {
+    protected function findModel($id) {
         if (($model = User::findOne($id)) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
     }
+
 }

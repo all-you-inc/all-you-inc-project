@@ -42,18 +42,25 @@ class ProductManageService
     }
 
     public function create(ProductCreateForm $form): Product
-    {
-        $brand = $this->brands->get($form->brandId);
+    {   
+        $brandId = null;
+        if(isset($form->brandId) && $form->brandId != NULL)
+        {
+            $brand = $this->brands->get($form->brandId);
+            $brandId = $brand->id;
+        }
+
         $category = $this->categories->get($form->categories->main);
 
         $product = Product::create(
-            $brand->id,
+            $brandId,
             $category->id,
             $form->code,
             $form->name,
             $form->description,
             $form->weight,
             $form->quantity->quantity,
+            $form->talent_id,
             new Meta(
                 $form->meta->title,
                 $form->meta->description,
@@ -106,16 +113,22 @@ class ProductManageService
 
     public function edit($id, ProductEditForm $form): void
     {
+        $brandId = null;
+        if(isset($form->brandId) && $form->brandId != NULL)
+        {
+            $brand = $this->brands->get($form->brandId);
+            $brandId = $brand->id;
+        }
         $product = $this->products->get($id);
-        $brand = $this->brands->get($form->brandId);
         $category = $this->categories->get($form->categories->main);
 
         $product->edit(
-            $brand->id,
+            $brandId,
             $form->code,
             $form->name,
             $form->description,
             $form->weight,
+            $form->talent_id,
             new Meta(
                 $form->meta->title,
                 $form->meta->description,

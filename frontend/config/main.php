@@ -1,9 +1,7 @@
 <?php
+
 $params = array_merge(
-    require(__DIR__ . '/../../common/config/params.php'),
-    require(__DIR__ . '/../../common/config/params-local.php'),
-    require(__DIR__ . '/params.php'),
-    require(__DIR__ . '/params-local.php')
+        require(__DIR__ . '/../../common/config/params.php'), require(__DIR__ . '/../../common/config/params-local.php'), require(__DIR__ . '/params.php'), require(__DIR__ . '/params-local.php')
 );
 
 return [
@@ -16,7 +14,7 @@ return [
     ],
     'aliases' => [
         '@staticRoot' => $params['staticPath'],
-        '@static'   => $params['staticHostInfo'],
+        '@static' => $params['staticHostInfo'],
     ],
     'layout' => 'blank',
     'controllerNamespace' => 'frontend\controllers',
@@ -44,7 +42,10 @@ return [
             'targets' => [
                 [
                     'class' => 'yii\log\FileTarget',
-                    'levels' => ['error', 'warning'],
+                    'levels' => ['info', 'trace', 'error', 'warning'],
+                    'categories' => ['mlm'],
+                    'logVars' => [],
+                    'logFile' => '@runtime/logs/custom/mlm.log',
                 ],
             ],
         ],
@@ -54,8 +55,8 @@ return [
         'backendUrlManager' => require __DIR__ . '/../../backend/config/urlManager.php',
         'frontendUrlManager' => require __DIR__ . '/urlManager.php',
         'urlManager' => function () {
-            return Yii::$app->get('frontendUrlManager');
-        },
+    return Yii::$app->get('frontendUrlManager');
+},
     ],
     'params' => $params,
 ];

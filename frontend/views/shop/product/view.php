@@ -51,19 +51,19 @@ $this->params['breadcrumbs'][] = $this->title;
                                     'value' => ProductHelper::statusLabel($product->status),
                                     'format' => 'raw',
                                 ],
-                                [
-                                    'attribute' => 'brand_id',
-                                    'value' => ArrayHelper::getValue($product, 'brand.name'),
-                                ],
                                 'code',
                                 'name',
                                 [
-                                    'attribute' => 'category_id',
+                                    'attribute' => 'Category',
                                     'value' => ArrayHelper::getValue($product, 'category.name'),
                                 ],
                                 [
                                     'label' => 'Other categories',
                                     'value' => implode(', ', ArrayHelper::getColumn($product->categories, 'name')),
+                                ],
+                                [
+                                    'attribute' => 'Talent',
+                                    'value' => ArrayHelper::getValue($product, 'userTalent.talent.name'),
                                 ],
                                 [
                                     'label' => 'Tags',

@@ -30,15 +30,13 @@ class AuthController extends Controller {
         if (!Yii::$app->user->isGuest) {
             return $this->goHome();
         }
-//dd($_SESSION);
         $form = new LoginForm();
-        if ($form->load(Yii::$app->request->post())) {
-//        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
+//        if ($form->load(Yii::$app->request->post())) {
+        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
             try {
                 $user = $this->service->auth($form);
                 Yii::$app->user->login(new Identity($user), $form->rememberMe ? Yii::$app->params['user.rememberMeDuration'] : 0);
-//                dd($_SESSION);
-                UserReferralService::checkAndCreateReferralFromSession();
+                UserReferralService::checkAndCreatePromoFromSession();
                 $this->actionUsersubscription($user);
                 return $this->goBack();
             } catch (\DomainException $e) {
@@ -67,11 +65,14 @@ class AuthController extends Controller {
     }
 
     private function actionUsersubscription($user) {
-        if ($user->isUserSubscribed()) {
-            Yii::$app->session->setFlash('success', 'Successfully login.');
-        } else {
+        if (isset($user->membership_id) && $user->membership_id != '' && $user->membership_id != NULL) {
             Yii::$app->session->setFlash('success', 'Successfully login, please select any membership plan');
-            Yii::$app->user->setReturnUrl(['plan']);
+            Yii::$app->user->setReturnUrl(['selectplan']);
+        } else {
+            Yii::$app->session->setFlash('success', 'Successfully login.');
+            if ($user->canShowBothTalent() || $user->isPromoter()) {
+                Yii::$app->user->setReturnUrl(['dashboard']);
+            }
         }
     }
 

@@ -17,6 +17,10 @@ use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use common\models\membership\Membership;
+use common\models\membership\MsItems;
+use yii\db\Query;
+use yii\helpers\ArrayHelper;
+use common\models\country\Country;
 /**
  * User model
  *
@@ -36,10 +40,12 @@ use common\models\membership\Membership;
  * @property string $city
  * @property string $state
  * @property string $country
+ * @property string $referral_code
  * 
  * @property Network[] $networks
  * @property WishlistItem[] $wishlistItems
  * @property UserSubscription[] $userSubscription
+ * @property Country $userCountry
  * @property UserTalent $userTalent
  * @property UserAddress[] $userAddress
  * @property Order[] $order
@@ -82,7 +88,7 @@ class User extends ActiveRecord implements AggregateRoot
         $this->updated_at = time();
     }
 
-    public static function requestSignup(string $username, string $email, string $name, string $password): self
+    public static function requestSignup(string $username, string $email, string $name, string $password, string $membership_id): self
     {
         $user = new User();
         $user->username = $username;
@@ -90,11 +96,20 @@ class User extends ActiveRecord implements AggregateRoot
         $user->name = $name;
         $user->setPassword($password);
         $user->created_at = time();
-        $user->status = self::STATUS_WAIT;
-        $user->email_confirm_token = Yii::$app->security->generateRandomString();
+        if (\Yii::$app->params['production']) {
+            $user->status = self::STATUS_WAIT;
+            $user->email_confirm_token = Yii::$app->security->generateRandomString();            
+        } else {
+            $user->status = self::STATUS_ACTIVE;
+            $user->email_confirm_token = null;
+        }
         $user->generateAuthKey();
         $user->generateReferralCode();
         $user->recordEvent(new UserSignUpRequested($user));
+        $user->membership_id = $membership_id;
+        if ($user->membership_id == Membership::Promoter) {
+            $user->tiers_payout_id = 1;
+        }
         return $user;
     }
 
@@ -200,7 +215,12 @@ class User extends ActiveRecord implements AggregateRoot
 
     public function getUserTalent()
     {
-        return $this->hasOne(UserTalent::className(), ['user_id' => 'id']);
+        return $this->hasMany(UserTalent::className(), ['user_id' => 'id']);
+    }
+
+    public function getUserCountry()
+    {
+        return $this->hasOne(Country::className(), ['id' => 'country']);
     }
 
     public function getUserAddress()
@@ -223,10 +243,32 @@ class User extends ActiveRecord implements AggregateRoot
         return $this->hasMany(UsersSquareInfo::className(), ['user_id' => 'id']);
     }
 
+    public function checkActiveTalentMemberShip(){
+
+      $subscriptions =  UserSubscription::find()->where([
+                                'type'=>"membership",
+                                'status' => "active",
+                                'is_deleted' => 0,
+                                'user_id' => $this->id
+                            ])->all();
+       
+ 
+
+      foreach($subscriptions as $subscription){
+         if( $subscription->ref_id == 1 || $subscription->ref_id == 2 
+             || $subscription->ref_id == 6 || $subscription->ref_id == 7 )
+             return true; 
+      }                          
+      return false;
+
+    }
+
     public function canUpdateProfile()
     {
+        
 //        $isPlanTalent = $this->userMembership->membership->id == 1;
-        $isPlanTalent = $this->userSubscription[0]->ref_id == 1;
+        $isPlanTalent = $this->checkActiveTalentMemberShip();
+    
         $isTalentSet = $this->userTalent == NULL;
 
         if($isPlanTalent && $isTalentSet)
@@ -325,25 +367,79 @@ class User extends ActiveRecord implements AggregateRoot
         return false;
     }
 
-    public function getTotalOrders()
-    {
-        
-        if($this->order == NULL)
+    public function getSubscribedItems(){
+        $AllItems = $this->userSubscription;
+        $MsItems = array();
+        foreach($AllItems as $item)
         {
-            return 0;
+            if($item->status == 'active')
+            {
+                $type = $item->type;
+                if($type == 'membership')
+                {
+                    if($item->ref_id == Membership::FreeTalent |
+                        $item->ref_id == Membership::FreeTalentWithProduct)
+                    {
+                        $getItems = MsItems::find()
+                                    ->where(['membership_id' => $item->ref_id,
+                                             'type' => 'free'])
+                                    ->all();
+
+                        foreach($getItems as $singleItem)
+                        {
+                            array_push($MsItems,$singleItem);
+                        }
+                    }
+                    else if($item->ref_id == Membership::Talent ||
+                            $item->ref_id == Membership::TalentWithProduct ||
+                            $item->ref_id == Membership::Promoter)
+                    {
+                        $getItems = MsItems::find()
+                                    ->where(['membership_id' => $item->ref_id,
+                                             'type' => 'basic'])
+                                    ->all();
+                                    
+                        foreach($getItems as $singleItem)
+                        {
+                            array_push($MsItems,$singleItem);
+                        }
+                    }
+                }
+                else if($type == 'addons')
+                {
+                    $getItems = MsItems::find()
+                                    ->where(['id' => $item->ref_id,
+                                             'type' => 'addons'])
+                                    ->all();
+                                    
+                    foreach($getItems as $singleItem)
+                    {
+                        array_push($MsItems,$singleItem);
+                    }
+                }
+            }
         }
-        else
-        {
-            return count($this->order);
-        }
+        return $MsItems;
     }
 
-    public function getTotalSalesAmount()
+    public function getTotalOrders()
     {
+        return $this->order == NULL ? 0 : count($this->order);
+    }
+
+    public function getTotalSalesAmount($talentId = null,$productId = null)
+    {
+        $conditionArr = 'shop_products.created_by ='.\Yii::$app->user->id;
+        if($talentId != null){
+            $conditionArr .= ' AND shop_products.talent_id='.$talentId;
+        }
+        if($productId != null){
+            $conditionArr .= ' AND shop_order_items.product_id='.$productId;
+        }
         $orders = Order::find()
         ->leftJoin('shop_order_items' , 'shop_order_items.order_id = shop_orders.id')
         ->leftJoin('shop_products' , 'shop_products.id = shop_order_items.product_id')
-        ->andWhere(['shop_products.created_by' => \Yii::$app->user->id])
+        ->andWhere($conditionArr)
         ->all();
         
         $totalAmount = 0;
@@ -352,7 +448,7 @@ class User extends ActiveRecord implements AggregateRoot
             
             foreach($orders as $order)
             {
-                $totalAmount += $order->getSalesCost();
+                $totalAmount += $order->getSalesCost($talentId);
             }
             return $totalAmount;
         }
@@ -370,8 +466,7 @@ class User extends ActiveRecord implements AggregateRoot
     public function isUserCardNeedToAdd($plan_id)
     {
         if($plan_id == Membership::Talent || $plan_id == Membership::TalentWithProduct 
-            || $plan_id == Membership::Promoter || $plan_id == Membership::FreeTalent
-            || $plan_id == Membership::FreeTalentWithProduct)
+            || $plan_id == Membership::Promoter)
         {
             return true;
         }
@@ -382,6 +477,22 @@ class User extends ActiveRecord implements AggregateRoot
     public function isUserCardEXist()
     {
         return $this->usersSquareInfo != null;
+    }
+
+    public function talentList() : array
+    {
+        $query = new Query;
+        $query->select(['user_talent.id','talent_master.name'])  
+        ->from('user_talent')
+        ->join(	'INNER JOIN','talent_master','talent_master.id = user_talent.talent_id')
+        ->where(['user_id' => $this->id]);
+
+        $command = $query->createCommand();
+        $data = $command->queryAll();
+        if($data != null){
+            return ArrayHelper::map($data, 'id', 'name');
+        }
+        return [];
     }
 
     //return null if all card is inactive
@@ -509,5 +620,10 @@ class User extends ActiveRecord implements AggregateRoot
     private function generateReferralCode()
     {
         $this->referral_code = Yii::$app->security->generateRandomString();
+    }
+    
+    public static function getNotificationText()
+    {
+        return 'User Notification Text';
     }
 }

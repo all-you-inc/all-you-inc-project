@@ -6,6 +6,7 @@ use shop\services\WaterMarker;
 use yii\db\ActiveRecord;
 use yii\web\UploadedFile;
 use yiidreamteam\upload\ImageUploadBehavior;
+use shop\entities\behaviors\SPImageUploadBehavior;
 
 /**
  * @property integer $id
@@ -16,7 +17,7 @@ use yiidreamteam\upload\ImageUploadBehavior;
  */
 class Photo extends ActiveRecord
 {
-    public static function create(UploadedFile $file): self
+    public static function create( $file): self
     {
         $photo = new static();
         $photo->file = $file;
@@ -42,7 +43,7 @@ class Photo extends ActiveRecord
     {
         return [
             [
-                'class' => ImageUploadBehavior::className(),
+                'class' => SPImageUploadBehavior::className(),
                 'attribute' => 'file',
                 'createThumbsOnRequest' => true,
                 'filePath' => '@staticRoot/origin/products/[[attribute_product_id]]/[[id]].[[extension]]',

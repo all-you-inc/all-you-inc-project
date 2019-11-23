@@ -28,6 +28,7 @@ use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
 use shop\entities\Shop\Product\Value;
 use Yii;
+use common\models\promo\Promo;
 
 class ProductController extends Controller
 {
@@ -69,7 +70,7 @@ class ProductController extends Controller
             'create' => ['POST'],
             'price' => ['PUT'],
             'quantity' => ['PUT'],
-            'update' => ['PUT'],
+            'update' => ['POST'],
             'delete' => ['DELETE'],
             'activate' => ['POST'],
             'draft' => ['POST'],
@@ -99,8 +100,10 @@ class ProductController extends Controller
     public function actionIndex()
     {
         $keyword = Yii::$app->request->getQueryParam('keyword');
+        $talent = Yii::$app->request->getQueryParam('talent');
 
-        $dataProvider = $this->products->getAllProducts($keyword);
+        $dataProvider = $this->products->getAllProducts($keyword,$talent);
+        
         $product_array = [];
         foreach($dataProvider->getModels() as $product){
             array_push($product_array,DataHelper::serializeProduct($product));
@@ -108,12 +111,156 @@ class ProductController extends Controller
         return $this->dataHeader($product_array);
     }
 
+    // $params = [];
+    // $params['id'] = $id;
+    // $params['code'] = $ref_code;
+    // $params['type'] =  'product';
+
+    public function actionStoreProductPromoSession()
+    {
+        if(\Yii::$app->request->post())
+        {
+            $i=0;
+            $dataErrors = [];
+            $dataObject = isset(\Yii::$app->request->post()['data']) ? 
+                                    \Yii::$app->request->post()['data'] : '' ;
+
+            if($dataObject == null){
+                return [ 
+                    'status' => 400,
+                    'message' => 'Data not found',
+                ];
+            }
+            if(!is_array($dataObject)){
+                return [ 
+                    'status' => 400,
+                    'message' => 'Data need in array',
+                ];
+            }
+            
+            foreach($dataObject as $params)
+            {
+                $user_id = Yii::$app->user->id;
+
+                if(!is_array($params)){
+                    $error = [ 
+                        'arrayKey' => $i,
+                        'state' => 'error',
+                        'message' => 'Data need in array',
+                    ];
+                    array_push($dataErrors,$error);
+                    $i++;
+                    continue;
+                }
+                if(!isset($params['id']) || $params['id'] == null){
+                    $error = [ 
+                        'arrayKey' => $i,
+                        'state' => 'error',
+                        'message' => 'id not found',
+                    ];
+                    array_push($dataErrors,$error);
+                    $i++;
+                    continue;
+                }
+                if (!$product = $this->products->find($params['id'])) {
+                    $error = [ 
+                        'arrayKey' => $i,
+                        'state' => 'error',
+                        'message' => 'product not found',
+                    ];
+                    array_push($dataErrors,$error);
+                    $i++;
+                    continue;
+                }
+                if(!isset($params['type']) || $params['type'] == null){
+                    $error = [ 
+                        'arrayKey' => $i,
+                        'state' => 'error',
+                        'message' => 'type not found',
+                    ];
+                    array_push($dataErrors,$error);
+                    $i++;
+                    continue;
+                }
+                if(!isset($params['code']) || $params['code'] == null){
+                    $error = [ 
+                        'arrayKey' => $i,
+                        'state' => 'error',
+                        'message' => 'code not found',
+                    ];
+                    array_push($dataErrors,$error);
+                    $i++;
+                    continue;
+                }
+
+                $isPromoExist = Promo::find()
+                            ->where([
+                                'user_id' => $user_id,
+                                'ref_id' => $params['id'],
+                                'type' => $params['type']])
+                            ->one();
+
+                if (!$isPromoExist) {
+                    $time = time();
+                    $promo = new Promo();
+                    $promo->user_id = $user_id;
+                    $promo->ref_id = $params['id'];
+                    $promo->type = $params['type'];
+                    $promo->referral_code = $params['code'];
+                    $promo->created_at = $time;
+                    $promo->modified_at = $time;
+                    $promo->created_by = $user_id;
+                    $promo->modified_by = $user_id;
+                    if (!$promo->save()) 
+                    {
+                        $error = [ 
+                            'arrayKey' => $i,
+                            'error'=> [
+                                    $promo->errors,
+                                ],
+                            'state' => 'error',
+                            'message' => 'Invalid data',
+                        ];
+                        array_push($dataErrors,$error);
+                        $i++;
+                        continue;
+                    }
+                    $success = [
+                        'arrayKey' => $i,
+                        'state' => 'success',
+                        'message' => 'Promo add successfully',
+                    ];
+                    array_push($dataErrors,$success);
+                    $i++;
+                    continue;
+                }
+                $error = [ 
+                    'arrayKey' => $i,
+                    'state' => 'error',
+                    'message' => 'Promo entry already exist',
+                ];
+                array_push($dataErrors,$error);
+                $i++;
+                continue;
+            }
+            return [
+                'status' => 200,
+                'data' => $dataErrors,
+                'message' => 'Process Complete',
+            ];
+        }
+        return [ 
+            'status' => 400,
+            'message' => 'Request must be (POST)',
+        ];
+    }
 
     public function actionUserCollection()
     {
         $keyword = Yii::$app->request->getQueryParam('keyword');
         
         $dataProvider = $this->products->getUserProducts(\Yii::$app->user->id,$keyword);
+        
         $product_array = [];
         foreach($dataProvider->getModels() as $product){
             array_push($product_array,DataHelper::serializeProduct($product));
@@ -238,6 +385,44 @@ class ProductController extends Controller
 
     public function actionCreate() {
         $form = new ProductCreateForm('api');
+
+        if(isset(Yii::$app->request->post()['ProductEditForm']['talent_id']) && Yii::$app->request->post()['ProductEditForm']['talent_id'] != null){
+            $talent_id =  Yii::$app->request->post()['ProductEditForm']['talent_id'];
+            $talentChecker = true;
+            $userTalents = $form->talentList();
+            if($userTalents != null){
+                foreach($userTalents as $key => $talent){
+                    if($key == $talent_id){
+                        $talentChecker = false;
+                    }
+                }
+                if($talentChecker){
+                    return [ 
+                        'status' => '400',
+                            'data'=>[
+                                'quantityUpdate'=>[
+                                        'Product'=> null,
+                                        'TalentErrors'=> 'User Talent Id Is Wrong',
+                                ],
+                            ],
+                        'message' => 'Invalid Data',
+                    ];
+                }
+            }else
+            {
+                return [ 
+                    'status' => '400',
+                        'data'=>[
+                            'quantityUpdate'=>[
+                                    'Product'=> null,
+                                    'TalentErrors'=> 'User Talent Not Found',
+                            ],
+                        ],
+                    'message' => 'Invalid Data',
+                ];
+            }
+        }
+
         if($form->load(Yii::$app->request->post()))
         {
             if ($form->validate()) 
@@ -424,36 +609,141 @@ class ProductController extends Controller
         $product = $this->findModel($id);
 
         $form = new ProductEditForm($product,'api');
+        $photosForm = new PhotosForm();
 
-        if($form->load(Yii::$app->request->post()) ){
-            if ($form->validate()) {
-                try {
-                    $this->service->edit($product->id, $form);
-                    return [
-                        'status' => '200',
-                        'message' => 'Product Update Successfully',
-                    ];
-                } catch (\DomainException $e) {
+        $photosDeleteArr = [];
+
+        if(isset(Yii::$app->request->post()['DeletePhoto']) && Yii::$app->request->post()['DeletePhoto'] != null){
+            if(is_array(Yii::$app->request->post()['DeletePhoto'])){
+                $photosDeleteArr = Yii::$app->request->post()['DeletePhoto'];
+            }
+            else
+            {
+                return [ 
+                    'status' => '400',
+                        'data'=>[
+                            'ProductUpdate'=>[
+                                    'Product'=> null,
+                                    'DeletePhotoErrors'=> 'Delete Photo Array Required',
+                            ],
+                        ],
+                    'message' => 'Invalid Data',
+                ];
+            }
+        }
+      
+        if(isset(Yii::$app->request->post()['ProductEditForm']['talent_id']) 
+        && Yii::$app->request->post()['ProductEditForm']['talent_id'] != null){
+
+            
+            $talent_id =  Yii::$app->request->post()['ProductEditForm']['talent_id'];
+            $talentChecker = true;
+            $userTalents = $form->talentList();
+
+            if($userTalents != null){
+                foreach($userTalents as $key => $talent){
+                    if($key == $talent_id){
+                        $talentChecker = false;
+                    }
+                }
+                if($talentChecker){
                     return [ 
                         'status' => '400',
                             'data'=>[
-                                'quantityUpdate'=>[
+                                'productUpdate'=>[
                                         'Product'=> null,
-                                        'ProductErrors'=> $e->getMessage(),
+                                        'TalentErrors'=> 'User Talent Id Is Wrong',
                                 ],
                             ],
                         'message' => 'Invalid Data',
                     ];
                 }
+            }else
+            {
+                return [ 
+                    'status' => '400',
+                        'data'=>[
+                            'productUpdate'=>[
+                                    'Product'=> null,
+                                    'TalentErrors'=> 'User Talent Not Found',
+                            ],
+                        ],
+                    'message' => 'Invalid Data',
+                ];
+            }
+        }
+        
+        if($form->load(Yii::$app->request->post()))
+        {   
+           
+            if ($photosForm->load(Yii::$app->request->post()))
+            {
+                if ($form->validate()) 
+                {
+                    if ($photosForm->validate()) 
+                    {
+                        try 
+                        {
+                            if($photosDeleteArr != null){
+                                foreach($photosDeleteArr as $deletePhotoId)
+                                {
+                                    $this->service->removePhoto($product->id, $deletePhotoId);
+                                }
+                            }
+                            $this->service->addPhotos($product->id, $photosForm);
+
+                            $this->service->edit($product->id, $form);
+                            return [
+                                'status' => '200',
+                                'message' => 'Product Update Successfully',
+                                'data' => [
+                                    'productUpdate'=>$this->serializeView($product),
+                                ]
+                            ];
+                        } catch (\DomainException $e)
+                        {
+                            return [ 
+                                'status' => '400',
+                                    'data'=>[
+                                        'productUpdate'=>[
+                                                'Product'=> null,
+                                                'ProductErrors'=> $e->getMessage(),
+                                        ],
+                                    ],
+                                'message' => 'Invalid Data',
+                            ];
+                        }
+                    }
+                    return [ 
+                        'status' => '400',
+                            'data'=>[
+                                'productUpdate'=>[
+                                        'Product'=> null,
+                                        'photoErrors'=> $photosForm->errors,
+                                ],
+                            ],
+                        'message' => 'Invalid Data',
+                    ];
+                }
+                return [ 
+                    'status' => '400',
+                        'data'=>[
+                            'productUpdate'=>[
+                                    'Product'=> null,
+                                    'ProductErrors'=> $form->errors,
+                                    'MetaErrors' => $form->meta->errors,
+                                    'CategoryErrors' => $form->categories->errors,
+                            ],
+                        ],
+                    'message' => 'Invalid Data',
+                ];
             }
             return [ 
                 'status' => '400',
                     'data'=>[
                         'quantityUpdate'=>[
-                                'Product'=> null,
-                                'ProductErrors'=> $form->errors,
-                                'MetaErrors' => $form->meta->errors,
-                                'CategoryErrors' => $form->categories->errors,
+                                'productUpdate'=> null,
+                                'ProductErrors'=> 'Photo Posted data not loaded in model',
                         ],
                     ],
                 'message' => 'Invalid Data',
@@ -463,8 +753,8 @@ class ProductController extends Controller
             'status' => '400',
                 'data'=>[
                     'quantityUpdate'=>[
-                            'Product'=> null,
-                            'ProductErrors'=> 'Posted data not loaded in model',
+                            'productUpdate'=> null,
+                            'ProductErrors'=> 'Product Posted data not loaded in model',
                     ],
                 ],
             'message' => 'Invalid Data',
@@ -552,7 +842,7 @@ class ProductController extends Controller
         if (!$product = $this->products->find($id)) {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
-        return $this->serializeView($product);
+        return $this->serializeListItem($product);
     }
 
 
@@ -600,13 +890,6 @@ class ProductController extends Controller
                         'self' => ['href' => Url::to(['category', 'id' => $product->category->id], true)],
                     ],
                 ],
-                'brand' => [
-                    'id' => $product->brand->id,
-                    'name' => $product->brand->name,
-                    '_links' => [
-                        'self' => ['href' => Url::to(['brand', 'id' => $product->brand->id], true)],
-                    ],
-                ],
                 'price' => [
                     'new' => $product->price_new,
                     'old' => $product->price_old,
@@ -645,13 +928,6 @@ class ProductController extends Controller
                         ],
                     ];
                 }, $product->categories),
-            ],
-            'brand' => [
-                'id' => $product->brand->id,
-                'name' => $product->brand->name,
-                '_links' => [
-                    'self' => ['href' => Url::to(['brand', 'id' => $product->brand->id], true)],
-                ],
             ],
             'tags' => array_map(function (Tag $tag) {
                 return [

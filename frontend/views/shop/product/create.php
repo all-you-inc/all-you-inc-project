@@ -35,12 +35,12 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="box-body">
             <div class="row">
                 <div class="col-md-4">
-                    <?= $form->field($model, 'brandId')->dropDownList($model->brandsList()) ?>
+                    <?= $form->field($model, 'talent_id')->dropDownList($model->talentList()) ?>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <?= $form->field($model, 'code')->textInput(['maxlength' => true]) ?>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
                 </div>
             </div>

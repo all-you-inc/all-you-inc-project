@@ -20,6 +20,7 @@ use Yii;
  *
  * @property User $user
  * @property User $referralUser
+ * @property User $referralCodeUser
  */
 class UserReferral extends \yii\db\ActiveRecord
 {
@@ -42,6 +43,7 @@ class UserReferral extends \yii\db\ActiveRecord
             [['referral_code'], 'string', 'max' => 32],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
             [['referral_user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['referral_user_id' => 'id']],
+            [['referral_code'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['referral_code' => 'referral_code']],
         ];
     }
 
@@ -78,5 +80,13 @@ class UserReferral extends \yii\db\ActiveRecord
     public function getReferralUser()
     {
         return $this->hasOne(User::className(), ['id' => 'referral_user_id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getReferralCodeUser()
+    {
+        return $this->hasOne(User::className(), ['referral_code' => 'referral_code']);
     }
 }

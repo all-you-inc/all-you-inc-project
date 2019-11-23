@@ -13,11 +13,11 @@ use common\services\SquarePaymentService;
 
 class UserPaymentService {
 
-    public static function paymentGateway($amount) {
+    public static function paymentGateway($amount, $params = []) {
         $responseArr = [];
         $square = new SquarePaymentService;
         $makeAmount = $amount * 100;
-        $response = $square->payment($makeAmount);
+        $response = $square->payment($makeAmount,$params);
         $erros = $response->getErrors();
         if ($erros != null) {
             $responseArr['code'] = 400;
@@ -49,11 +49,15 @@ class UserPaymentService {
     }
 
     public static function createSubscription($type, $ref_id, $user_id, $group_id = '') {
-        if ($group_id == '') {
+        if ($group_id == '')
             $group_id = abs(crc32(uniqid()));
-        }
+
         $time = time();
         $model = new UserSubscription;
+        
+        if ($type == 'membership')
+            $model->disablePrevious($user_id);
+        
         $model->user_id = $user_id;
         $model->type = $type;
         $model->ref_id = $ref_id;

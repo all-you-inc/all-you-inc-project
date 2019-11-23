@@ -27,10 +27,24 @@ $this->params['breadcrumbs'][] = $this->title;
             <h2><?= $this->title ?></h2>
             <?= Html::beginForm() ?>
             <div class="row">
-                <?php if ($basic) {
+                <?php if ($free) {
                     ?>
                     <div class="container">
-                        <h2><input type="checkbox" id="checkAllBasic" name="basic" value="<?= $basic[0]->id ?>"> UPGRADE MEMBERSHIP @ <?= $basic[0]->price . ' ' . $basic[0]->currency->title ?></h2>
+                        <h2><input type="checkbox" id="checkAllBasic" name="free" value="<?= !isset($free[0]->membership->id) ? : $free[0]->membership->id ?>"> DOWNGRADE MEMBERSHIP TO FREE</h2>
+                        <table class="table table-step-shipping">
+                            <tbody> 
+                                <?php foreach ($free as $item) { ?>
+                                    <tr>
+                                        <td><input type="checkbox" disabled="" class="basic"></td>
+                                        <td><strong><?= $item->unit != 0 ? $item->unit . ' ' : 'NO ' ?><?= $item->itemType->title ?></strong></td>
+                                    </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php } if ($basic) { ?>
+                    <div class="container">
+                        <h2><input type="checkbox" id="checkAllBasic" name="basic" value="<?= !isset($basic[0]->id) ? : $basic[0]->id ?>"> UPGRADE MEMBERSHIP @ <?= !isset($basic[0]->price) ? : $basic[0]->price . ' ' . !isset($basic[0]->currency->title) ? : $basic[0]->currency->title ?></h2>
                         <table class="table table-step-shipping">
                             <tbody> 
                                 <?php foreach ($basic as $item) { ?>
@@ -57,29 +71,34 @@ $this->params['breadcrumbs'][] = $this->title;
                             </tbody>
                         </table>
                     </div>
-                <?php } if ($membership) { ?>
-                    <div class="container">
+                <?php }
+                // if (isset($membership)) { ?>
+                    <!-- <div class="container">
                         <h2>Membership</h2>
                         <table class="table table-step-shipping">
                             <tbody> 
-                                <?php foreach ($membership as $item) { ?>
+                                <?php // foreach ($membership as $item) { ?>
                                     <tr>
-                                        <td><input type="checkbox"   name="membership[]" value="<?= $item->id ?>"></td>
-                                        <td><strong><?= $item->unit != 0 ? $item->unit . ' ' : '' ?><?= $item->itemType->title ?></strong></td>
-                                        <td>@ <?= $item->price . ' ' . $item->currency->title ?></td>
+                                        <td><input type="checkbox"   name="membership[]" value="<?php //echo $item->id ?>"></td>
+                                        <td><strong><?php //echo $item->unit != 0 ? $item->unit . ' ' : '' ?><?php //echo $item->itemType->title ?></strong></td>
+                                        <td>@ <?php //echo $item->price . ' ' . $item->currency->title ?></td>
                                     </tr>
-                                <?php } ?>
+                                <?php // } ?>
                             </tbody>
                         </table>
-                    </div>
-                <?php } ?>
+                    </div> -->
+                <?php //} ?>
             </div><!-- End .row -->
-            <?php if ($membership || $basic || $addons) { ?>
+            <?php
+            if ($basic || $addons) {
+                ?>
                 <div class="form-footer">
-                    <?= Html::submitButton('Submit', ['class' => 'btn btn-primary', 'name' => 'subscription-button']) ?>
+                <?= Html::submitButton('Submit', ['class' => 'btn btn-primary', 'name' => 'subscription-button']) ?>
                 </div>
+            <?php }else{ ?>
+                No Subscription Found!!
             <?php } ?>
-            <?= Html::endForm() ?>
+<?= Html::endForm() ?>
         </div>
     </div>
 </main><!-- End .main -->

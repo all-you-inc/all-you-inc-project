@@ -9,41 +9,51 @@ use frontend\widgets\Shop\FeaturedProductsWidget;
 ?>
 <div class="col-lg-9 col-xxl-10">
     <nav class="toolbox">
-        <div class="toolbox-left">
-            <div class="toolbox-item toolbox-sort">
-                <div class="select-custom">
-                    <select name="orderby" class="form-control">
-                        <option value="menu_order" selected="selected">Default sorting</option>
-                        <option value="popularity">Sort by popularity</option>
-                        <option value="rating">Sort by average rating</option>
-                        <option value="date">Sort by newness</option>
-                        <option value="price">Sort by price: low to high</option>
-                        <option value="price-desc">Sort by price: high to low</option>
-                    </select>
-                </div><!-- End .select-custom -->
-
-                <a href="#" class="sorter-btn" title="Set Ascending Direction"><span class="sr-only">Set Ascending Direction</span></a>
-            </div><!-- End .toolbox-item -->
-        </div><!-- End .toolbox-left -->
 
         <div class="toolbox-item toolbox-show">
+            <!-- Search Area -->
         </div><!-- End .toolbox-item -->
+        <ul class="pagination">
+            <?=
+                LinkPager::widget([
+                    'pagination' => $pages,
+                    'activePageCssClass' => 'page-item active',
+                    'maxButtonCount' => 8,
+                    'linkOptions' => ['class' => 'page-item page-link'],
+                    'disabledPageCssClass' => 'disabled',
+                ]);
+            ?>
+        </ul>
     </nav>
 
     <div class="row row-sm">
-        <?php foreach ($dataProvider as $product):
-            ?>
-            <?=
-            $this->render('_product', [
-                'product' => $product
-            ])
-            ?>
-        <?php endforeach; ?>
-
+        <?php if($dataProvider != null){ ?>
+            <?php foreach ($dataProvider as $product):
+                ?>
+                <?=
+                $this->render('_product', [
+                    'product' => $product
+                ])
+                ?>
+            <?php endforeach; ?>
+        <?php }else {  ?>
+            <h1>NO RESULT FOUND</h1>
+        <?php } ?>
     </div><!-- End .row -->
 
     <nav class="toolbox toolbox-pagination">
         <div class="toolbox-item toolbox-show">
         </div><!-- End .toolbox-item -->
+        <ul class="pagination">
+            <?=
+                LinkPager::widget([
+                    'pagination' => $pages,
+                    'activePageCssClass' => 'page-item active',
+                    'maxButtonCount' => 8,
+                    'linkOptions' => ['class' => 'page-item page-link'],
+                    'disabledPageCssClass' => 'disabled',
+                ]);
+            ?>
+        </ul>
     </nav>
 </div>

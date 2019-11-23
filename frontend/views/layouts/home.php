@@ -7,7 +7,7 @@ OwlCarouselAsset::register($this);
 ?>
 <?php $this->beginContent('@frontend/views/layouts/main.php') ?>
 <?= $this->render('shared/home/main_slider') ?>
-<?= $this->render('shared/home/main_banner') ?>
+<?php // $this->render('shared/home/main_banner') ?>
 <?= $this->render('shared/home/spotlight') ?>
 <?= $this->render('shared/home/home_body') ?>
 <?= FeaturedProductsWidget::widget(['limit' => 5])?>

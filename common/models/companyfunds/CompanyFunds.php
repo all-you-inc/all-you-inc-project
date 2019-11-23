@@ -35,7 +35,7 @@ class CompanyFunds extends \yii\db\ActiveRecord {
      */
     public function rules() {
         return [
-            [['referral_code', 'transaction_id'], 'required'],
+            [['transaction_id'], 'required'],
             [['type'], 'string'],
             [['ref_id', 'created_at', 'created_by', 'modified_at', 'modified_by', 'is_deleted'], 'integer'],
             [['referral_code', 'transaction_id'], 'string', 'max' => 32],

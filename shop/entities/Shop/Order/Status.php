@@ -19,4 +19,5 @@ class Status
         $this->value = $value;
         $this->created_at = $created_at;
     }
+    
 }

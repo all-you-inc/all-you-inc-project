@@ -1,6 +1,10 @@
 <?php
+
 return [
-    'adminEmail' => 'admin@example.com',
+    'timezone' => 'Asia/Karachi',
+    'adminEmail' => 'support@allyouinc.com',
+    'fromEmail' => 'support@allyouinc.com',
+//    'adminEmail' => 'admin@example.com',
     'user.passwordResetTokenExpire' => 3600,
     'user.rememberMeDuration' => 3600 * 24 * 30,
     'cookieDomain' => '.allyouinc.siliconplex',
@@ -12,22 +16,38 @@ return [
     'mailChimpListId' => '0d003a2dac',
     'smsRuKey' => '',
     'reCaptcha' => [
-        'secret-key' => '6LdugLQUAAAAAFZYesN7Q-B-dJuWgh-2XOWN6uo2',
-        'site-key' => '6LdugLQUAAAAAP9k-TGv9cjv0P7BEUvLbkczOpd3'
+        'secret-key' => '6Lf8r7sUAAAAAMDWJeNQdiDeA4Zs-nMtzQkb_lzP',
+        'site-key' => '6Lf8r7sUAAAAAJsmtG_X1hQ-8lEEDNseDixFK8wh'
     ],
-    'squarePaymentGateWay' =>[
+    'squarePaymentGateWay' => [
         'application-id' => '< APPLICATION-ID >',
         'location-id' => '< LOCATION-ID >',
         'access-token' => '< ACCESS-TOKEN >',
         'host' => 'https://connect.squareup.com',
         'paymentform' => 'https://js.squareup.com/v2/paymentform',
-
         'sandBox-application-id' => 'sandbox-sq0idb-apT3BZxK1FV_vp438rah2A',
         'sandBox-location-id' => 'KWBMPZCRK0EXM',
         'sandBox-access-token' => 'EAAAEGTRSlZDiCtHB9-fPIlyi6uzC2blwHeIkrgSXrwmKlaF8WqmhRHciHPGwO-o',
         'sandBox-host' => 'https://connect.squareupsandbox.com',
         'sandBox-paymentform' => 'https://js.squareupsandbox.com/v2/paymentform',
-
         'secret-token' => '< SECRET-TOKEN >',
+    ],
+    'apns' => [
+        'link' => 'ssl://gateway.push.apple.com:2195',
+        'authKey' => '/certificates/AuthKey_Q7ZSLHLWCB.p8',
+        'teamId' => 'MMPPK22YYX',
+        'authKeyId' => 'Q7ZSLHLWCB',
+        'apns-topic' => 'com.spcom.allyouinc',
+        'endPoint' => 'https://api.development.push.apple.com/3/device',
+        'url_cnt' => 'https://www.google.com',
+        'certificatePath' => '',
+        'defaultAlertSound' => 'default',
+        'certificate_name' => "aps_development.cer",
+    ],
+    'fcm' => [
+        'link' => 'https://fcm.googleapis.com/fcm/send',
+        'apiKey' => 'AAAAYMLDWJU:APA91bE8FhFmFvXCPTKeN5_WJXrvMB0jkWUyB2-3eLqJyhlzni8-ydG3_hZ4L0WOkgslJXEuQY-thJ9bMZ-iYjqPbJhBQTdLDTDPFosorekCEf4i0jjEaNfiDDJ-XWbYO7KN7rJsrtiv',
+        'notificationExperienceUrl' => 'exp://exp.host/@usama.ayaz.siliconplex/allyouinc',
+        'experienceId' => '@usama.ayaz.siliconplex/allyouinc',
     ],
 ];

@@ -45,7 +45,7 @@ class UserAddress extends \yii\db\ActiveRecord
         return [
             [['user_id', 'country_id','state', 'city', 'area', 'postal_code','address','first_name','last_name','phone_number'], 'required'],
             [['user_id', 'country_id', 'default', 'created_at', 'created_by', 'modified_at', 'modified_by', 'is_deleted','phone_number'], 'integer'],
-            [['state', 'city', 'area', 'postal_code'], 'string', 'max' => 256],
+            [['state', 'city', 'area', 'postal_code', 'latitude', 'longitude'], 'string', 'max' => 256],
             [['address'], 'string', 'max' => 512],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
             [['country_id'], 'exist', 'skipOnError' => true, 'targetClass' => Country::className(), 'targetAttribute' => ['country_id' => 'id']],
@@ -72,6 +72,8 @@ class UserAddress extends \yii\db\ActiveRecord
             'modified_at' => 'Modified At',
             'modified_by' => 'Modified By',
             'is_deleted' => 'Is Deleted',
+            'latitude' => 'Latitude',
+            'longitude' => 'Longitude',
         ];
     }
 

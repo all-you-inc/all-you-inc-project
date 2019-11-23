@@ -37,7 +37,7 @@ AppAsset::register($this);
         <?php $this->beginBody() ?>
         <div class="page-wrapper">
             <?= $this->render('shared/menu') ?>
-            <main class="main">
+            <main class="main custom-main">
                 <?= $content ?>
             </main><!-- End .main -->
             <?= $this->render('shared/footer') ?>

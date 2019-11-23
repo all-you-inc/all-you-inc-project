@@ -11,6 +11,7 @@ use common\services\UserPaymentService;
 use common\models\membership\Membership;
 use common\services\SquarePaymentService;
 use common\models\usersquareinfo\UsersSquareInfo;
+use common\models\membership\MsItems;
 
 class SquareController extends Controller 
 {
@@ -40,14 +41,20 @@ class SquareController extends Controller
     public function actionPaymentForm()
     {
         $response = [];
-        // first purchase member ship
-        $membershipId = Yii::$app->request->getQueryParam('id');
+        $session = \Yii::$app->session;
+        $allCards = $this->getAllCards();
         // 1- membership, 2- addons, 3- checkout
         $request = Yii::$app->request->getQueryParam('request');
 
         // ONLY FOR MEMBERSHIP
         if($request == 'membership'){
             $response['request'] = $request;
+            $membershipId = $session['membership_id'];
+
+            if($membershipId == null){
+                return $this->goHome();
+            }
+            
             // title , price
             $membership = Membership::find()->where(['status' => 'active', 'is_deleted' => 0, 'id' => $membershipId])->one();
             $response['membership'] = $membership;
@@ -68,12 +75,41 @@ class SquareController extends Controller
             }
         }
         else if($request == 'addons'){
+            $totalPrice = 0;
             $response['request'] = $request;
-            
+            $sessionData = $session['addons'];
+
+            if($sessionData == null){
+                return $this->goHome();
+            }
+
+            if($sessionData['basic'] != null){
+                $type = null;
+                if($sessionData['basic'] == Membership::Talent || $sessionData['basic'] == Membership::TalentWithProduct){
+                    $type = 'basic';
+                }
+                $membership = Membership::find()->where(['status' => 'active', 'is_deleted' => 0, 'id' => $sessionData['basic']])->one();
+                $response['membership'] = $membership;
+                $totalPrice += $membership->price;
+                $response['membershipItems'] = UserPaymentService::getAllSubscriptions($sessionData['basic'],$type);
+            }
+
+            if($sessionData['addons'] != null){
+                $response['addons'] = [];
+                foreach($sessionData['addons'] as $addonsId){
+                    $singleItem = MsItems::find()->where(['id' => $addonsId])->one();
+                    $totalPrice += $singleItem->price;
+                    array_push($response['addons'],$singleItem);
+                }
+                $response['addonsTotalPrice'] = $totalPrice;
+            }
+            $session['addonsTotalPrice'] = $totalPrice;
         }
 
-
-        return $this->render('payment',['response'=>$response]);
+        if($request == null) {
+            return $this->goHome();
+        }
+        return $this->render('payment',['response'=>$response,'allcards' => $allCards]);
     }
 
 
@@ -176,81 +212,95 @@ class SquareController extends Controller
         ];
     }
 
-    public function actionGetAllCards()
+    public function getAllCards()
     {
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        if(\Yii::$app->request->post()['type'] == 'model'){
-            $cards = UsersSquareInfo::find()->where(['user_id' => \Yii::$app->user->id])->all();
-            if($cards != null)
-            {
-                if(\Yii::$app->user->identity->getUser()->square_cust_id != null){
-                    $square = new SquarePaymentService;
-                    $result = $square->retrieveCustomer(\Yii::$app->user->identity->getUser()->square_cust_id);
-                    if(!is_object($result))
-                    {
-                        return [
-                            'code' => 400,
-                            'message' => $result,
-                            ];
-                    }
-                    $errors = $result->getErrors();
-
-                    if($errors != null){
-                        $errorArr = [];
-                        $i=0;
-                        foreach($errors as $error)
-                        {
-                            $errorArr[$i] = $error->getDetails();
-                            $i++;
-                        }  
-                        return [
-                            'code' => 400,
-                            'message' => $errorArr,
-                            ];
-                    }
-                    $customer = $result->getCustomer();
-                    $cards = $customer->getCards();
-                    $cardsArr = [];
-                    $customerArr = [
-                        'id' => $customer->getId(),
-                        'name' => $customer->getGivenName(),
-                        'email' => $customer->getEmailAddress(),
-                        'refId' => $customer->getReferenceId(),
-                        
-                    ];
-                    $i=0;
-                    foreach($cards as $card){
-                        $cardsArr[$i] = [
-                            'sourceId' => $card->getId(),
-                            'cardBrand' => $card->getCardBrand(),
-                            'last4Digit' => $card->getLast4(),
-                            'expMonth' => $card->getExpMonth(),
-                            'expYear' => $card->getExpYear(),
-                        ];
-                        $i++;
-                    }
-
+        $cards = UsersSquareInfo::find()->where(['user_id' => \Yii::$app->user->id])->all();
+        if($cards != null)
+        {
+            if(\Yii::$app->user->identity->getUser()->square_cust_id != null){
+                $square = new SquarePaymentService;
+                $result = $square->retrieveCustomer(\Yii::$app->user->identity->getUser()->square_cust_id);
+                if(!is_object($result))
+                {
                     return [
-                            'code' => 200,
-                            'message' => 'Card Found',
-                            'data' => [
-                                'customerDetail' => $customerArr,
-                                'customerCards' => $cardsArr
-                            ],
+                        'code' => 400,
+                        'message' => $result,
                         ];
                 }
+                $errors = $result->getErrors();
+
+                if($errors != null){
+                    $errorArr = [];
+                    $i=0;
+                    foreach($errors as $error)
+                    {
+                        $errorArr[$i] = $error->getDetails();
+                        $i++;
+                    }  
+                    return [
+                        'code' => 400,
+                        'message' => $errorArr,
+                        ];
+                }
+                $customer = $result->getCustomer();
+                $cards = $customer->getCards();
+                $cardsArr = [];
+                $customerArr = [
+                    'id' => $customer->getId(),
+                    'name' => $customer->getGivenName(),
+                    'email' => $customer->getEmailAddress(),
+                    'refId' => $customer->getReferenceId(),
+                    
+                ];
+                $i=0;
+                foreach($cards as $card){
+                    $makeImageName = '';
+
+                    if($card->getCardBrand() == 'VISA'){
+                        $makeImageName = 'visa.png';
+                    }else if($card->getCardBrand() == 'MASTERCARD'){
+                        $makeImageName = 'master.png';
+                    }else if($card->getCardBrand() == 'DISCOVER'){
+                        $makeImageName = 'discover.png';
+                    }else if($card->getCardBrand() == 'DISCOVER_DINERS'){
+                        $makeImageName = 'diners_club.png';
+                    }else if($card->getCardBrand() == 'JCB'){
+                        $makeImageName = 'jcb.png';
+                    }else if($card->getCardBrand() == 'AMERICAN_EXPRESS'){
+                        $makeImageName = 'americanexp.png';
+                    }else if($card->getCardBrand() == 'CHINA_UNIONPAY'){
+                        $makeImageName = 'cup.png';
+                    }else{
+                        $makeImageName = 'democard.png';
+                    }
+
+                    $cardsArr[$i] = [
+                        'sourceId' => $card->getId(),
+                        'cardBrand' => $card->getCardBrand(),
+                        'last4Digit' => $card->getLast4(),
+                        'expMonth' => $card->getExpMonth(),
+                        'expYear' => $card->getExpYear(),
+                        'imageLink' => \Yii::$app->params['staticHostInfo'] . '/' . 'cards' . '/' . $makeImageName,
+                    ];
+                    $i++;
+                }
+
                 return [
-                    'code' => 400,
-                    'message' => 'Square Id Not Found',
+                        'code' => 200,
+                        'message' => 'Card Found',
+                        'data' => [
+                            'customerDetail' => $customerArr,
+                            'customerCards' => $cardsArr
+                        ],
                     ];
             }
             return [
                 'code' => 400,
-                'message' => 'No Card Found',
-            ];
+                'message' => 'Square Id Not Found',
+                ];
         }
         return [
-            'code' => 400,
+            'code' => 201,
             'message' => 'No Card Found',
         ];
     }

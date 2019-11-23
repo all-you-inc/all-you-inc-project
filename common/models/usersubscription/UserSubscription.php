@@ -71,4 +71,15 @@ class UserSubscription extends \yii\db\ActiveRecord {
         return $this->hasOne(User::className(), ['id' => 'user_id']);
     }
 
+    public function disablePrevious($uid){
+        return Yii::$app->db->createCommand()
+            ->update(self::tableName(), 
+            [ 'status'=>'in-active' ], 
+            [ 'user_id'=>$uid ]) 
+            ->execute();
+
+    }
+
+
+
 }

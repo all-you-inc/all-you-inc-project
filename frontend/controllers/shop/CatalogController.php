@@ -16,6 +16,10 @@ use shop\entities\Shop\Category;
 use shop\entities\Shop\Brand;
 use yii\helpers\ArrayHelper;
 use common\services\UserReferralService;
+use yii\data\Pagination;
+use common\models\usertalent\UserTalent;
+use common\models\industry\Industry;
+use common\models\talentmaster\TalentMaster;
 
 class CatalogController extends Controller {
 
@@ -40,13 +44,22 @@ class CatalogController extends Controller {
      */
     public function actionIndex() {
         $this->layout = 'main';
-        $dataProvider = Product::find()->all();
+        $dataProvider = Product::find()->where(['status' => 1, 'is_locked' => 0]);
         $categories = Category::find()->andWhere(['>', 'depth', 0])->orderBy('lft')->all();
         $brands = Brand::find()->orderBy('name')->all();
+
+        $countQuery = clone $dataProvider;
+        $pages = new Pagination(['totalCount' => $countQuery->count()]);
+        $pages->defaultPageSize = 9;
+        $dataProvider = $dataProvider->offset($pages->offset)
+                ->limit($pages->limit)
+                ->all();
+
         return $this->render('index', [
                     'brands' => $brands,
                     'categories' => $categories,
                     'dataProvider' => $dataProvider,
+                    'pages' => $pages,
         ]);
     }
 
@@ -61,13 +74,21 @@ class CatalogController extends Controller {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
         $categories = Category::find()->andWhere(['>', 'depth', 0])->orderBy('lft')->all();
-        $dataProvider = Product::find()->where(['category_id' => $id])->all();
+        $dataProvider = Product::find()->where(['category_id' => $id]);
         $brands = Brand::find()->orderBy('name')->all();
+
+        $countQuery = clone $dataProvider;
+        $pages = new Pagination(['totalCount' => $countQuery->count()]);
+        $pages->defaultPageSize = 9;
+        $dataProvider = $dataProvider->offset($pages->offset)
+                ->limit($pages->limit)
+                ->all();
 
         return $this->render('index', [
                     'brands' => $brands,
                     'categories' => $categories,
                     'dataProvider' => $dataProvider,
+                    'pages' => $pages,
         ]);
     }
 
@@ -82,12 +103,21 @@ class CatalogController extends Controller {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
         $categories = Category::find()->andWhere(['>', 'depth', 0])->orderBy('lft')->all();
-        $dataProvider = Product::find()->where(['brand_id' => $id])->all();
+        $dataProvider = Product::find()->where(['brand_id' => $id]);
         $brands = Brand::find()->orderBy('name')->all();
+
+        $countQuery = clone $dataProvider;
+        $pages = new Pagination(['totalCount' => $countQuery->count()]);
+        $pages->defaultPageSize = 9;
+        $dataProvider = $dataProvider->offset($pages->offset)
+                ->limit($pages->limit)
+                ->all();
+
         return $this->render('index', [
                     'brands' => $brands,
                     'categories' => $categories,
                     'dataProvider' => $dataProvider,
+                    'pages' => $pages,
         ]);
     }
 
@@ -116,13 +146,54 @@ class CatalogController extends Controller {
         $form = new SearchForm();
         $form->load(\Yii::$app->request->queryParams);
         $form->validate();
-
         $dataProvider = $this->products->search($form);
 
         return $this->render('search', [
                     'dataProvider' => $dataProvider,
                     'searchForm' => $form,
         ]);
+    }
+
+    public function actionSearchProductBy() {
+        $this->layout = 'main';
+        $condition = '';
+        $dataObj = \Yii::$app->request->get();
+        $searchName = $dataObj['query'];
+        $category = $dataObj['category'];
+        if ($category != 'product') {
+            $dataProvider = UserTalent::find();
+            if ($searchName != null) {
+                $dataProvider = $dataProvider->leftJoin('industry', 'industry.`id` = user_talent.`industry_id`');
+                $dataProvider = $dataProvider->leftJoin('talent_master', 'talent_master.`id` = user_talent.`talent_id`');
+                $condition .= 'industry.name LIKE (\'%' . $searchName . '%\') OR talent_master.name LIKE (\'%' . $searchName . '%\')';
+                $dataProvider = $dataProvider->where($condition);
+            }
+            $countQuery = clone $dataProvider;
+            $pages = new Pagination(['totalCount' => $countQuery->count()]);
+            $pages->defaultPageSize = 8;
+            $dataProvider = $dataProvider->offset($pages->offset)->limit($pages->limit)->all();
+
+            return $this->render('talent', [
+                        'dataProvider' => $dataProvider,
+                        'pages' => $pages,
+            ]);
+        } else {
+            $dataProvider = Product::find();
+            if ($searchName != null) {
+                $condition .= 'name LIKE (\'%' . $searchName . '%\')';
+                $dataProvider = $dataProvider->where($condition);
+            }
+            $countQuery = clone $dataProvider;
+            $pages = new Pagination(['totalCount' => $countQuery->count()]);
+            $pages->defaultPageSize = 9;
+            $dataProvider = $dataProvider->offset($pages->offset)->limit($pages->limit)->all();
+            return $this->render('index', [
+                        'brands' => Brand::find()->orderBy('name')->all(),
+                        'categories' => Category::find()->andWhere(['>', 'depth', 0])->orderBy('lft')->all(),
+                        'dataProvider' => $dataProvider,
+                        'pages' => $pages,
+            ]);
+        }
     }
 
     /**
@@ -136,7 +207,7 @@ class CatalogController extends Controller {
         }
         $this->layout = 'main';
         if (isset($_GET['referral']) && $_GET['referral'] != NULL) {
-            UserReferralService::addReferralInSession($_GET['referral'],$id);
+            UserReferralService::addReferralInSession($_GET['referral'], $id);
         }
         $cartForm = new AddToCartForm($product);
         $reviewForm = new ReviewForm();

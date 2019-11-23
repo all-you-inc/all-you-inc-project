@@ -11,21 +11,28 @@ use yii\web\Controller;
 use common\services\UserAddressService;
 use common\services\UserPaymentService;
 use common\services\UserMlmService;
+use shop\services\TransactionManager;
 use common\services\SquarePaymentService;
+use common\models\userfunds\UserFunds;
+use shop\repositories\UserRepository;
 
 class CheckoutController extends Controller {
 
+    private $transaction;
     public $layout = 'blank';
     private $service;
     private $cart;
+    private $users;
 
-    public function __construct($id, $module, OrderService $service, Cart $cart, $config = []) {
+    public function __construct($id, $module, OrderService $service, UserRepository $users, Cart $cart, TransactionManager $transaction, $config = []) {
         parent::__construct($id, $module, $config);
+        $this->transaction = $transaction;
         $this->service = $service;
         $this->cart = $cart;
-    }
+        $this->users = $users;
+        }
 
-    public function behaviors(): array {
+        public function behaviors(): array {
         return [
             'access' => [
                 'class' => AccessControl::className(),
@@ -52,10 +59,25 @@ class CheckoutController extends Controller {
         }
         $payment = UserPaymentService::createPayment($params);
         if ($payment) {
-            foreach ($cart->getItems() as $item) {
-                $product = $item->getProduct();
-                UserMlmService::createSalesOrderMlm($product->price_new, $product->id, Yii::$app->user->id);
-            }
+            $this->transaction->wrap(function () use ($cart) {
+                if ($cart->getItems()) {
+                    foreach ($cart->getItems() as $item) {
+                        $product = $item->getProduct();
+                        $total_price = $product->price_new * $item->getQuantity();
+                        $transaction_id = UserMlmService::createSalesOrderMlm($total_price, $product->id, Yii::$app->user->id);
+                        if ($transaction_id) {
+                            $funds = UserFunds::find()->where(['transaction_id' => $transaction_id])->all();
+                            if ($funds) {
+                                foreach ($funds as $fund) {
+                                    if ($fund['amount'] != 0.00) {
+                                        $this->users->sendEmail($fund, 'funds/user/fund-html', 'funds/user/fund-text', $fund->user->email, 'Your AllYouInc Wallet Transaction For Product');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
         return TRUE;
     }
@@ -67,7 +89,6 @@ class CheckoutController extends Controller {
         $form = new OrderForm($this->cart->getWeight());
         $session = \Yii::$app->session;
         $user_addresses = UserAddressService::userAddress('get', Yii::$app->user->id);
-
         if (isset(Yii::$app->request->post()['card_given']) && Yii::$app->request->post()['card_given'] == 1) {
             SquarePaymentService::$checkoutCard = 1;
             $form->customer->phone = $session['checkout_square']['phone'];
@@ -93,13 +114,16 @@ class CheckoutController extends Controller {
                                 'address' => Yii::$app->request->post()['DeliveryForm']['address'],
                                 'note' => Yii::$app->request->post()['OrderForm']['note'],
                             ];
-                            return $this->redirect(['square/details', 'request' => 'checkout']);
+                            return $this->redirect(\yii\helpers\Url::base('https') . '/' . 'square/details?request=checkout');
                         }
-                        $cart = $this->cart;
-                        $paymentGateway = UserPaymentService::paymentGateway($cart->getCost()->getTotal());
+
+                        $params = [];
+                        $params['note'] = 'Purchase Products';
+                        
+                        $paymentGateway = UserPaymentService::paymentGateway($this->cart->getCost()->getTotal(),$params);
                         if ($paymentGateway['code'] == 200) {
                             $order = $this->service->checkout(Yii::$app->user->id, $form);
-                            $payment = $this->actionPayment($order->id, $order['cost'], $cart, $paymentGateway);
+                            $payment = $this->actionPayment($order->id, $order['cost'], $this->cart, $paymentGateway);
                             $this->cart->clear();
                             if ($payment) {
                                 $session->remove('checkout_square');

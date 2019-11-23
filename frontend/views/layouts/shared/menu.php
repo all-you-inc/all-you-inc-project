@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use frontend\widgets\Shop\CartWidget;
+use frontend\widgets\Shop\NotificationWidget;
 use shop\entities\Shop\Product\Product;
 use shop\entities\Shop\Category;
 
@@ -18,7 +19,9 @@ if (\yii\helpers\Url::home() == Yii::$app->request->url) {
         <div class="container-fluid">
             <div class="header-left">
                 <?php if (Yii::$app->user->isGuest): ?>
-                    <a href="<?= Html::encode(Url::to(['/signup'])) ?>" class="btn signup-btn">Sign Up</a>
+
+                    <a href="<?= Html::encode(Url::to(['/signup'])) ?>" class="btn signup-btn">Join Now</a>
+
                 <?php endif; ?>
                 <nav class="main-nav">
                     <ul class="menu sf-arrows">
@@ -70,6 +73,31 @@ if (\yii\helpers\Url::home() == Yii::$app->request->url) {
                                 </div>
                             </div><!-- End .megamenu -->
                         </li>
+
+                        <!-----SEARCH BAR----->
+                        <li>
+                            <div class="header-search">
+                                <a href="#" class="search-toggle" role="button"><i style="color:#696969;" class="icon-search"></i></a>
+                                <form action="/catalog/search" method="GET">
+                                    <div class="header-search-wrapper">
+                                        <input type="search" class="form-control" name="query" id="q" placeholder="Search Talent and Product...">
+                                        <div class="select-custom">
+                                            <select id="cat" name="category">
+                                                <option value="product">Products</option>
+                                                <option value="talent">Talents</option>
+                                                <?php // if($searchCategories != null){ ?>
+                                                <?php // foreach($searchCategories as $category){ ?>
+                                                        <!--<option value="<?= $category->id ?>"><?= $category->name ?></option>-->
+                                                <?php // } ?>
+                                                <?php // } ?>
+                                            </select>
+                                        </div><!-- End .select-custom -->
+                                        <button class="btn" type="submit"><i class="icon-search"></i></button>
+                                    </div><!-- End .header-search-wrapper -->
+                                </form>
+                            </div><!-- End .header-search -->
+                        </li>
+
                         <!-----EVENTS----->
                         <li>
                             <a href="#" class="sf-with-ul custom-home-btn">EVENTS</a>
@@ -79,59 +107,9 @@ if (\yii\helpers\Url::home() == Yii::$app->request->url) {
                                 <li><a href="">Event 2</a></li>
                             </ul>
                         </li>
-                        <!-----SHOPS----->
-                        <li class="megamenu-container">
-                            <a href="" class="sf-with-ul custom-home-btn">SHOPS</a>
-                            <div class="megamenu">
-                                <div class="row">
-                                    <div class="col-lg-8">
-                                        <div class="row">
-                                            <div class="col-lg-4">
-                                                <div class="menu-title">
-                                                    <a href="#">Category 1</a>
-                                                </div>
-                                                <ul>
-                                                    <li><a href="">Item 1.1</a></li>
-                                                    <li><a href="">Item 1.2</a></li>
-                                                    <li><a href="">Item 1.3</a></li>
-                                                </ul>
-                                            </div><!-- End .col-lg-4 -->
-                                            <div class="col-lg-4">
-                                                <div class="menu-title">
-                                                    <a href="#">Category 2</a>
-                                                </div>
-                                                <ul>
-                                                    <li><a href="">Item 2.1</a></li>
-                                                    <li><a href="">Item 2.2</a></li>
-                                                    <li><a href="">Item 2.3</a></li>
-                                                    <li><a href="">Item 2.4</a></li>
-                                                </ul>
-                                            </div><!-- End .col-lg-4 -->
-                                            <div class="col-lg-4">
-                                                <div class="menu-title">
-                                                    <a href="#">Category 3</a>
-                                                </div>
-                                                <ul>
-                                                    <li><a href="">Item 3.1</a></li>
-                                                    <li><a href="">Item 3.2</a></li>
-                                                    <li><a href="">Item 3.3</a></li>
-                                                    <li><a href="">Item 3.4</a></li>
-                                                    <li><a href="">Item 3.5</a></li>
-                                                </ul>
-                                            </div><!-- End .col-lg-4 -->
-                                        </div><!-- End .row -->
-                                    </div><!-- End .col-lg-8 -->
-                                    <div class="col-lg-4">
-                                        <div class="banner">
-                                            <a href="#">
-                                                <img src="<?= Yii::getAlias('@web/images/menu-banner.jpg') ?>" alt="Menu banner" class="product-promo">
-                                            </a>
-                                        </div><!-- End .banner -->
-                                    </div><!-- End .col-lg-4 -->
-                                </div><!-- End .row -->
-                            </div>
-                            <!-- End .megamenu -->
-                        </li>
+                        <!--                        <li>
+                                                    <a href="<?= Url::to(['/contact']); ?>" class="custom-home-btn">Contact Us</a>
+                                                </li>-->
                     </ul>
                 </nav>
             </div><!-- End .header-left -->
@@ -142,10 +120,10 @@ if (\yii\helpers\Url::home() == Yii::$app->request->url) {
                 </a>
             </div><!-- End .header-center -->
 
+            <?php $searchCategories = Category::find()->where(['>', 'depth', 0])->orderBy('id DESC')->all(); ?>
             <div class="header-right">
-                <nav class="main-nav">
+                <nav class="main-nav custom-main-nav">
                     <ul class="menu sf-arrows">
-                        <!-----EVENTS----->
                         <li>
                             <a href="#" class="sf-with-ul custom-home-btn">My Account</a>
 
@@ -155,7 +133,7 @@ if (\yii\helpers\Url::home() == Yii::$app->request->url) {
                                 <?php else: ?>
                                     <li><a class="menu" href="<?= Html::encode(Url::to(['/dashboard'])) ?>">Dashboard</a></li>
                                     <li><a class="menu" href="<?= Html::encode(Url::to(['/auth/auth/logout'])) ?>" data-method="post">Logout</a></li>
-                                <?php endif; ?>
+                                    <?php endif; ?>
 
                             </ul>
                         </li>
@@ -165,7 +143,11 @@ if (\yii\helpers\Url::home() == Yii::$app->request->url) {
                 </nav>
                 <!---- cart view ---->             
                 <?= CartWidget::widget() ?>
-
+                <!---- notification view ---->
+                <?php
+                if (!Yii::$app->user->isGuest)
+                    echo NotificationWidget::widget();
+                ?>
 
             </div><!-- End .header-dropdowns -->
         </div><!-- End .header-right -->

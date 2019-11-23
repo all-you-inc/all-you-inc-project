@@ -83,8 +83,18 @@ class OrderService
             foreach ($products as $product) {
                 $this->products->save($product);
             }
+//           <!! commit clean cart line and put after payments transection !!>
+            //$this->cart->clear();
         });
 
         return $order;
     }
+
+    public function getStatusName($id){
+        $status  = ['New','Paid','Sent','Completed','Cancelled','Cancelled By Customer'];
+        return $status[$id-1];
+       
+
+    }
+
 }
